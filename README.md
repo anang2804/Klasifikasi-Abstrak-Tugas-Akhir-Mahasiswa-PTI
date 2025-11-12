@@ -253,26 +253,80 @@ Alfian Sukma, Badrus Zaman, Endah Purwanti (2015). "Klasifikasi Dokumen Temu Kem
 
 ## Alur Proses Sistem
 
-### 1. Alur Proses Training Sistem
+### 1. Alur Proses Training Sistem (Update Implementasi Terbaru)
 
 ```
-START → Dokumen Testing → Pemberian Label → Text Mining → TF-IDF → Cosine Similarity → KNN → END
-                ↑
-         Data Training
+┌─────────────────────────────────────────────────────────────────────┐
+│                          TRAINING PIPELINE                          │
+└─────────────────────────────────────────────────────────────────────┘
+
+START
+  ↓
+┌──────────────────────────┐
+│  1. WEB SCRAPING         │ → ejournal.unesa.ac.id (2020-2025)
+│  (Menu: Scraping)        │
+└──────────────────────────┘
+  ↓
+┌──────────────────────────┐
+│  2. AUTO-LABELING        │ → Keyword Scoring (130+ keywords)
+│  (auto_labeler.py)       │   - TKJ: 60 keywords (bobot 1-3)
+└──────────────────────────┘   - RPL: 70 keywords (bobot 1-3)
+  ↓                             → Confidence calculation
+┌──────────────────────────┐   → Label: RPL atau TKJ
+│  3. DATA LATIH           │
+│  (Model: Abstract)       │ → Simpan ke database dengan label
+│  (Menu: Data Latih)      │   → Total: 312 data (242 RPL, 70 TKJ)
+└──────────────────────────┘
+  ↓
+┌──────────────────────────┐
+│  4. TRAINING MODEL       │ → Train-Test Split (80:20)
+│  (Menu: Training)        │
+└──────────────────────────┘
+  ↓
+  ├─→ ┌──────────────────────────┐
+  │   │ 4a. TEXT PREPROCESSING   │ → Tokenizing (case folding, clean)
+  │   │ (preprocessing.py)       │ → Stopword Removal (~750 words)
+  │   └──────────────────────────┘ → Stemming (Nazief-Adriani)
+  │
+  ├─→ ┌──────────────────────────┐
+  │   │ 4b. FEATURE EXTRACTION   │ → TF-IDF Vectorization
+  │   │ (feature_extraction.py)  │   - TF(d,t) = f(d,t) (raw count)
+  │   └──────────────────────────┘   - IDF = log((N+1)/(df+1))+1
+  │                                   - L2 Normalization
+  │                                   - Output: 1000 features
+  │
+  ├─→ ┌──────────────────────────┐
+  │   │ 4c. KNN TRAINING         │ → k=5 nearest neighbors
+  │   │ (classifier.py)          │ → metric='cosine'
+  │   └──────────────────────────┘ → weights='distance'
+  │
+  └─→ ┌──────────────────────────┐
+      │ 4d. MODEL EVALUATION     │ → Accuracy, Precision, Recall
+      │ (evaluate method)        │ → F1-Score, Confusion Matrix
+      └──────────────────────────┘ → Simpan ke ModelMetrics
+  ↓
+┌──────────────────────────┐
+│  5. SAVE MODEL           │ → knn_classifier.joblib
+│  (models/ directory)     │ → tfidf_vectorizer.joblib
+└──────────────────────────┘ → model_metadata.joblib
+  ↓
+END (Model siap untuk klasifikasi)
 ```
 
 **Mapping ke Menu Website:**
 
-| Tahap                 | Menu Website      | File/Modul              | Keterangan                                   |
-| --------------------- | ----------------- | ----------------------- | -------------------------------------------- |
-| **Dokumen Testing**   | Menu Beranda      | `templates/index.html`  | Dashboard statistik data latih & uji         |
-| **Pemberian Label**   | Menu Scraping     | `auto_labeler.py`       | Auto-label dengan keyword scoring (130+ kw)  |
-| **Data Training**     | Menu Data Latih   | `templates/label_data.html` | Data hasil scraping dengan auto-label    |
-| **Text Mining**       | Auto di Training  | `preprocessing.py`      | Tokenizing → Stopword Removal → Stemming     |
-| **TF-IDF**            | Auto di Training  | `feature_extraction.py` | Raw count TF, IDF smoothing, L2 norm         |
-| **Cosine Similarity** | Auto di Training  | `classifier.py`         | Ukur kemiripan dengan cosine similarity      |
-| **KNN**               | Menu Training     | `templates/train.html`  | Train & simpan model (k=5, cosine, distance) |
-| **Data Testing**      | Menu Data Uji     | `templates/test_data.html` | History klasifikasi (manual + upload)     |
+| Tahap                  | Menu Website      | File/Modul                  | Keterangan                                   |
+| ---------------------- | ----------------- | --------------------------- | -------------------------------------------- |
+| **Web Scraping**       | Menu Scraping     | `scraper.py`                | Scrape 100+ abstrak dari ejournal            |
+| **Auto-Labeling**      | Auto saat Scrape  | `auto_labeler.py`           | Keyword scoring → RPL/TKJ (confidence)       |
+| **Data Latih**         | Menu Data Latih   | `templates/label_data.html` | View 312 data dengan auto-label              |
+| **Training**           | Menu Training     | `templates/train.html`      | Trigger training pipeline                    |
+| **Text Preprocessing** | Auto di Training  | `preprocessing.py`          | Clean → Tokenize → Stopword → Stem           |
+| **TF-IDF**             | Auto di Training  | `feature_extraction.py`     | Vectorization (1000 features, L2 norm)       |
+| **KNN**                | Auto di Training  | `classifier.py`             | Train model (k=5, cosine similarity)         |
+| **Evaluation**         | Auto di Training  | `classifier.py` (evaluate)  | Hitung metrik → Simpan ke database           |
+| **View Metrics**       | Menu Evaluasi     | `templates/evaluation.html` | Tampilkan accuracy, precision, recall, F1    |
+| **Data Uji**           | Menu Data Uji     | `templates/test_data.html`  | History klasifikasi (manual + upload)        |
 
 ### 2. Alur Proses Text Mining (Preprocessing)
 
@@ -314,48 +368,98 @@ Stem    : ["teliti", "tuju", "kembang", "sistem", "informasi"]
 ### 3. Alur Proses K-Nearest Neighbor (Klasifikasi)
 
 ```
-START
+┌─────────────────────────────────────────────────────────────────────┐
+│                      CLASSIFICATION PIPELINE                        │
+└─────────────────────────────────────────────────────────────────────┘
+
+START (Abstrak baru dari user)
   ↓
-Menggunakan nilai cosine similarity
+┌──────────────────────────┐
+│  1. INPUT ABSTRAK        │ → Manual Input (text area)
+│  (Menu: Klasifikasi)     │ → Upload File (TXT/PDF/DOCX)
+└──────────────────────────┘
   ↓
-Terdapat kategori mayoritas dalam k-Nearest Neighbor?
-  ├─ True → Dokumen yang sudah terklasifikasi → END
-  └─ False → Klasifikasi berdasarkan nilai cosine similarity terbesar → (loop back)
+┌──────────────────────────┐
+│  2. SMART EXTRACTION     │ → TXT: Pattern matching "ABSTRAK"
+│  (untuk upload file)     │ → PDF: Max 15 halaman, cari "ABSTRAK"
+│  (extract_abstract_      │ → DOCX: Paragraph-by-paragraph
+│   section)               │ → Output: Teks abstrak saja (bukan full doc)
+└──────────────────────────┘
+  ↓
+┌──────────────────────────┐
+│  3. TEXT PREPROCESSING   │ → Tokenizing (clean + split)
+│  (preprocessing.py)      │ → Stopword Removal
+└──────────────────────────┘ → Stemming (Sastrawi)
+  ↓
+┌──────────────────────────┐
+│  4. TF-IDF TRANSFORM     │ → Load tfidf_vectorizer.joblib
+│  (feature_extraction.py) │ → Transform text ke vektor (1000 features)
+└──────────────────────────┘ → Normalisasi L2
+  ↓
+┌──────────────────────────┐
+│  5. LOAD KNN MODEL       │ → Load knn_classifier.joblib
+│  (classifier.py)         │ → Model sudah trained dengan data latih
+└──────────────────────────┘
+  ↓
+┌──────────────────────────┐
+│  6. HITUNG COSINE        │ → Cosine Similarity = (A·B)/(||A||×||B||)
+│     SIMILARITY           │ → Hitung dengan semua data training
+└──────────────────────────┘ → Urutkan dari tertinggi ke terendah
+  ↓
+┌──────────────────────────┐
+│  7. AMBIL k-NN           │ → Ambil 5 dokumen terdekat (k=5)
+│     (k=5)                │ → Contoh: [RPL:0.85, RPL:0.82, TKJ:0.78,
+└──────────────────────────┘           RPL:0.75, TKJ:0.72]
+  ↓
+┌──────────────────────────┐
+│  8. VOTING MAYORITAS     │
+└──────────────────────────┘
+  ↓
+  Terdapat kategori mayoritas?
+  │
+  ├─ YES (Mayoritas Jelas) ──→ ┌──────────────────────────┐
+  │                             │  9a. AMBIL LABEL         │
+  │                             │      MAYORITAS           │
+  │                             └──────────────────────────┘
+  │                             Contoh: [RPL, RPL, RPL, TKJ, RPL]
+  │                             → Label: RPL
+  │                             → Confidence: 4/5 = 80%
+  │
+  └─ NO (Voting Seri 2:2:1) ─→ ┌──────────────────────────┐
+                                │  9b. AMBIL DARI DOKUMEN  │
+                                │      SIMILARITY TERTINGGI│
+                                └──────────────────────────┘
+                                Contoh: [RPL:0.85, RPL:0.82, 
+                                         TKJ:0.78, TKJ:0.77]
+                                → Label: RPL (similarity 0.85)
+                                → Confidence: 2/4 = 50%
+  ↓
+┌──────────────────────────┐
+│  10. OUTPUT HASIL        │ → Label: RPL atau TKJ
+│                          │ → Confidence: 50% - 100%
+│                          │ → Top 20 kata kunci (TF-IDF tertinggi)
+│                          │ → Highlight kata penting di teks
+└──────────────────────────┘
+  ↓
+┌──────────────────────────┐
+│  11. SIMPAN KE DATA UJI  │ → Model: ClassificationHistory
+│  (Menu: Data Uji)        │ → Fields: abstract_text, predicted_label,
+└──────────────────────────┘           confidence, source, classified_at
+  ↓
+END (Hasil klasifikasi ditampilkan)
 ```
-
-**Proses Klasifikasi di Menu Klasifikasi:**
-
-1. **Input Abstrak** → User memasukkan teks di `templates/classify.html`
-
-2. **Preprocessing** → Teks diproses dengan Text Mining pipeline
-
-3. **TF-IDF Transform** → Konversi teks hasil preprocessing ke vektor
-
-4. **Hitung Cosine Similarity** → Hitung kemiripan dengan semua data training
-
-   ```
-   Cosine Similarity = (A · B) / (||A|| × ||B||)
-   ```
-
-5. **Ambil k-Nearest Neighbors** → Ambil 5 dokumen terdekat (k=5)
-
-6. **Voting Mayoritas**:
-
-   - **True** (ada mayoritas): Ambil label mayoritas
-     - Contoh: [RPL, RPL, RPL, TKJ, RPL] → **RPL (4/5 = 80%)**
-   - **False** (voting seri): Ambil label dari dokumen dengan similarity tertinggi
-     - Contoh: [RPL, RPL, TKJ, TKJ] → Pilih yang cosine similarity-nya paling besar
-
-7. **Output Hasil**:
-   - Label prediksi (RPL/TKJ)
-   - Confidence score (persentase voting)
-   - Kata kunci penting (top 20 TF-IDF)
-   - Highlight kata penting di teks
 
 **File Implementasi:**
 
-- `classifier.py` → Method `predict_single()`
-- Menggunakan `sklearn.neighbors.KNeighborsClassifier` dengan `metric='cosine'`
+| Komponen              | File/Function                  | Output                          |
+| --------------------- | ------------------------------ | ------------------------------- |
+| Input Interface       | `templates/classify.html`      | Form input + upload             |
+| Smart Extraction      | `app.py: extract_abstract_section()` | Teks abstrak saja        |
+| Preprocessing         | `preprocessing.py: preprocess_text()` | Token yang di-stem      |
+| TF-IDF Transform      | `feature_extraction.py: transform()` | Vektor 1000 features     |
+| KNN Prediction        | `classifier.py: predict_single()` | Label + confidence          |
+| Save to DB            | `app.py: /classify route`      | Insert ClassificationHistory    |
+| Display Result        | `templates/classify.html`      | Prediksi + keyword + highlight  |
 
 ## Metode dan Algoritma
 
@@ -398,6 +502,216 @@ Terdapat kategori mayoritas dalam k-Nearest Neighbor?
 - **Recall**: TP / (TP + FN)
 - **F1-Score**: 2 × (Precision × Recall) / (Precision + Recall)
 - **Confusion Matrix**: Visualisasi prediksi vs aktual
+
+## Alur Proses Detail dengan Rumus
+
+### Alur 4: Proses Evaluasi Model (Metrik Performa)
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                       EVALUATION PIPELINE                           │
+└─────────────────────────────────────────────────────────────────────┘
+
+START (Setelah Training Model)
+  ↓
+┌──────────────────────────┐
+│  1. TRAIN-TEST SPLIT     │ → Data Latih (312 data)
+│  (80:20)                 │   ├─ Training Set: 249 data (80%)
+└──────────────────────────┘   └─ Testing Set: 63 data (20%)
+  ↓
+┌──────────────────────────┐
+│  2. MODEL PREDICTION     │ → KNN predict pada testing set
+│  (pada test set)         │ → Output: y_pred = [RPL, TKJ, RPL, ...]
+└──────────────────────────┘ → Bandingkan dengan y_true (label asli)
+  ↓
+┌──────────────────────────┐
+│  3. CONFUSION MATRIX     │
+└──────────────────────────┘
+  
+                    Predicted
+                 RPL      TKJ
+         ┌─────────────────────┐
+     RPL │  TP_rpl  │  FN_rpl  │  → True Positive RPL, False Negative RPL
+Actual   ├─────────────────────┤
+     TKJ │  FP_rpl  │  TP_tkj  │  → False Positive RPL, True Positive TKJ
+         └─────────────────────┘
+  
+  Contoh Real:
+                 RPL    TKJ
+          ┌──────────────────┐
+      RPL │  45    │   3     │  → 45 benar RPL, 3 salah prediksi TKJ
+      TKJ │   2    │  13     │  → 2 salah prediksi RPL, 13 benar TKJ
+          └──────────────────┘
+  
+  ↓
+┌──────────────────────────────────────────────────────────────────┐
+│  4. HITUNG METRIK EVALUASI                                       │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+#### 4a. ACCURACY (Akurasi Keseluruhan)
+
+**Formula:**
+```
+Accuracy = (TP_rpl + TP_tkj) / Total_Prediksi
+         = (Jumlah Prediksi Benar) / (Total Semua Prediksi)
+```
+
+**Contoh Perhitungan:**
+```
+TP_rpl = 45   (Prediksi RPL, Actual RPL - BENAR)
+TP_tkj = 13   (Prediksi TKJ, Actual TKJ - BENAR)
+FP_rpl = 2    (Prediksi RPL, Actual TKJ - SALAH)
+FN_rpl = 3    (Prediksi TKJ, Actual RPL - SALAH)
+
+Accuracy = (45 + 13) / (45 + 13 + 2 + 3)
+         = 58 / 63
+         = 0.9206 = 92.06%
+```
+
+**Interpretasi:**
+- Model benar mengklasifikasi **92.06%** dari semua data test
+- Semakin tinggi accuracy, semakin baik model secara keseluruhan
+- Cocok digunakan ketika dataset **seimbang** (jumlah RPL ≈ TKJ)
+
+---
+
+#### 4b. PRECISION (Presisi per Kelas)
+
+**Formula:**
+```
+Precision_RPL = TP_rpl / (TP_rpl + FP_rpl)
+              = (Prediksi RPL yang Benar) / (Semua yang Diprediksi RPL)
+
+Precision_TKJ = TP_tkj / (TP_tkj + FP_tkj)
+              = (Prediksi TKJ yang Benar) / (Semua yang Diprediksi TKJ)
+```
+
+**Contoh Perhitungan:**
+```
+Precision_RPL = 45 / (45 + 2) 
+              = 45 / 47 
+              = 0.9574 = 95.74%
+
+Precision_TKJ = 13 / (13 + 3) 
+              = 13 / 16 
+              = 0.8125 = 81.25%
+```
+
+**Interpretasi:**
+- Dari semua yang diprediksi **RPL**, **95.74%** benar-benar RPL
+- Dari semua yang diprediksi **TKJ**, **81.25%** benar-benar TKJ
+- **Precision tinggi** = sedikit **False Positive** (salah prediksi positif)
+- Penting ketika cost dari False Positive tinggi
+
+---
+
+#### 4c. RECALL (Sensitivitas/Daya Ingat per Kelas)
+
+**Formula:**
+```
+Recall_RPL = TP_rpl / (TP_rpl + FN_rpl)
+           = (Prediksi RPL yang Benar) / (Semua yang Seharusnya RPL)
+
+Recall_TKJ = TP_tkj / (TP_tkj + FN_tkj)
+           = (Prediksi TKJ yang Benar) / (Semua yang Seharusnya TKJ)
+```
+
+**Contoh Perhitungan:**
+```
+Recall_RPL = 45 / (45 + 3) 
+           = 45 / 48 
+           = 0.9375 = 93.75%
+
+Recall_TKJ = 13 / (13 + 2) 
+           = 13 / 15 
+           = 0.8667 = 86.67%
+```
+
+**Interpretasi:**
+- Dari semua abstrak **RPL asli**, **93.75%** berhasil terdeteksi sebagai RPL
+- Dari semua abstrak **TKJ asli**, **86.67%** berhasil terdeteksi sebagai TKJ
+- **Recall tinggi** = sedikit **False Negative** (data tidak terdeteksi)
+- Penting ketika cost dari False Negative tinggi (miss detection)
+
+---
+
+#### 4d. F1-SCORE (Harmonic Mean dari Precision & Recall)
+
+**Formula:**
+```
+F1_RPL = 2 × (Precision_RPL × Recall_RPL) / (Precision_RPL + Recall_RPL)
+
+F1_TKJ = 2 × (Precision_TKJ × Recall_TKJ) / (Precision_TKJ + Recall_TKJ)
+```
+
+**Contoh Perhitungan:**
+```
+F1_RPL = 2 × (0.9574 × 0.9375) / (0.9574 + 0.9375)
+       = 2 × 0.8976 / 1.8949
+       = 0.9474 = 94.74%
+
+F1_TKJ = 2 × (0.8125 × 0.8667) / (0.8125 + 0.8667)
+       = 2 × 0.7042 / 1.6792
+       = 0.8387 = 83.87%
+```
+
+**Interpretasi:**
+- F1-Score adalah **rata-rata harmonis** dari Precision dan Recall
+- Nilai tinggi (mendekati 100%) = model **balance** antara precision & recall
+- **F1_RPL 94.74%** = model sangat baik untuk kelas RPL
+- **F1_TKJ 83.87%** = model cukup baik untuk kelas TKJ
+- Digunakan ketika ingin **keseimbangan** antara precision dan recall
+
+---
+
+```
+  ↓
+┌──────────────────────────┐
+│  5. SIMPAN METRICS       │ → Model: ModelMetrics
+│  (ke database)           │ → Fields: accuracy, precision_rpl, 
+└──────────────────────────┘   precision_tkj, recall_rpl, recall_tkj,
+  ↓                             f1_rpl, f1_tkj, confusion_matrix,
+┌──────────────────────────┐   training_samples, test_samples, trained_at
+│  6. VISUALISASI          │
+│  (Menu: Evaluasi)        │ → Grafik Confusion Matrix (heatmap)
+└──────────────────────────┘ → Grafik Bar Chart (Precision, Recall, F1)
+  ↓                             → Tabel Metrik per Kelas
+END                             → Statistik Training/Testing Samples
+```
+
+---
+
+### Rangkuman Metrik Evaluasi
+
+| Metrik      | Formula                          | Interpretasi                              | Range  | Kapan Digunakan |
+| ----------- | -------------------------------- | ----------------------------------------- | ------ | --------------- |
+| **Accuracy**| (TP+TN) / Total                  | Akurasi keseluruhan model                 | 0-100% | Dataset seimbang |
+| **Precision**| TP / (TP + FP)                  | Ketepatan prediksi positif                | 0-100% | False Positive berbahaya |
+| **Recall**  | TP / (TP + FN)                   | Kemampuan mendeteksi kelas positif        | 0-100% | False Negative berbahaya |
+| **F1-Score**| 2×(P×R) / (P+R)                  | Keseimbangan Precision & Recall           | 0-100% | Balance P & R (umum) |
+
+**Contoh Kasus Penggunaan:**
+
+1. **Spam Email Detection** → Gunakan **Precision**
+   - False Positive (email penting masuk spam) lebih berbahaya
+   
+2. **Cancer Detection** → Gunakan **Recall**
+   - False Negative (kanker tidak terdeteksi) lebih berbahaya
+   
+3. **Document Classification (Kasus Kita)** → Gunakan **F1-Score**
+   - Butuh keseimbangan: tidak boleh terlalu banyak salah klasifikasi (FP maupun FN)
+
+**File Implementasi:**
+
+| Komponen           | File/Function                    | Output                     |
+| ------------------ | -------------------------------- | -------------------------- |
+| Train-Test Split   | `classifier.py: train()`         | X_train, X_test, y_train, y_test |
+| Model Prediction   | `classifier.py: evaluate()`      | y_pred array               |
+| Confusion Matrix   | `sklearn.metrics.confusion_matrix` | 2×2 matrix                |
+| Metrik Calculation | `sklearn.metrics.classification_report` | Dict metrics      |
+| Save to DB         | `app.py: /train route`           | Insert ModelMetrics        |
+| Visualization      | `templates/evaluation.html`      | Charts + Tables + Heatmap  |
 
 ## Struktur Menu
 
