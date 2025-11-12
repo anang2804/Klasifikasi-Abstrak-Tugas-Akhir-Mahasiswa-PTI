@@ -1,0 +1,429 @@
+{% extends "base.html" %} {% block title %}Klasifikasi Abstrak - Klasifikasi
+Abstrak PTI{% endblock %} {% block content %}
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card bg-warning text-white">
+      <div class="card-body">
+        <h2 class="mb-2">
+          <i class="bi bi-lightning"></i> Klasifikasi Abstrak Baru
+        </h2>
+        <p class="mb-0">
+          Masukkan atau upload abstrak baru untuk diklasifikasikan ke kategori
+          RPL atau TKJ.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-8 mx-auto">
+    <!-- Input Form -->
+    <div class="card mb-4">
+      <div class="card-header bg-white">
+        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+          <li class="nav-item">
+            <a
+              class="nav-link active"
+              data-bs-toggle="tab"
+              href="#text-input"
+              role="tab"
+            >
+              <i class="bi bi-keyboard"></i> Input Teks
+            </a>
+          </li>
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              data-bs-toggle="tab"
+              href="#file-upload"
+              role="tab"
+            >
+              <i class="bi bi-file-earmark-arrow-up"></i> Upload File
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div class="card-body">
+        <div class="tab-content">
+          <!-- Text Input Tab -->
+          <div
+            class="tab-pane fade show active"
+            id="text-input"
+            role="tabpanel"
+          >
+            <form method="POST" action="{{ url_for('classify') }}">
+              <div class="mb-3">
+                <label for="abstract_text" class="form-label">
+                  Teks Abstrak
+                </label>
+                <textarea
+                  class="form-control"
+                  id="abstract_text"
+                  name="abstract_text"
+                  rows="10"
+                  required
+                  placeholder="Masukkan teks abstrak tugas akhir di sini..."
+                >
+{{ result.text if result else '' }}</textarea
+                >
+                <div class="form-text">
+                  Minimal 50 karakter untuk hasil klasifikasi yang akurat.
+                </div>
+              </div>
+
+              <div class="d-grid">
+                <button type="submit" class="btn btn-warning btn-lg text-white">
+                  <i class="bi bi-lightning"></i> Klasifikasi
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- File Upload Tab -->
+          <div class="tab-pane fade" id="file-upload" role="tabpanel">
+            <form id="uploadForm" enctype="multipart/form-data">
+              <div class="mb-3">
+                <label for="file" class="form-label">
+                  Upload File Abstrak
+                </label>
+                <input
+                  class="form-control"
+                  type="file"
+                  id="file"
+                  name="file"
+                  accept=".txt,.pdf,.docx"
+                  required
+                />
+                <div class="form-text">
+                  Format yang didukung: TXT, PDF, DOCX (max 16MB)
+                </div>
+              </div>
+
+              <div class="alert alert-info mb-3">
+                <i class="bi bi-info-circle"></i>
+                <strong>Catatan:</strong> Sistem akan otomatis mengekstrak
+                <strong>HANYA bagian ABSTRAK</strong> dari dokumen.
+                <br />
+                <small
+                  >📄 Untuk PDF/DOCX skripsi lengkap, sistem akan mencari
+                  section "ABSTRAK" atau "ABSTRACT" secara otomatis.</small
+                >
+              </div>
+
+              <div class="d-grid">
+                <button type="submit" class="btn btn-warning btn-lg text-white">
+                  <i class="bi bi-upload"></i> Upload dan Klasifikasi
+                </button>
+              </div>
+            </form>
+
+            <div id="uploadResult" class="mt-3" style="display: none"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result -->
+    {% if result %}
+    <div class="card border-success">
+      <div class="card-header bg-success text-white">
+        <h5 class="mb-0">
+          <i class="bi bi-check-circle"></i> Hasil Klasifikasi
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <h6 class="text-muted">Kategori:</h6>
+            <h2>
+              <span
+                class="badge badge-{{ result.label.lower() }}"
+                style="font-size: 1.5rem"
+              >
+                {{ result.label }}
+              </span>
+            </h2>
+            <p class="mb-0">
+              {% if result.label == 'RPL' %}
+              <i class="bi bi-code-square"></i> Rekayasa Perangkat Lunak {% else
+              %} <i class="bi bi-hdd-network"></i> Teknik Komputer dan Jaringan
+              {% endif %}
+            </p>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-muted">Confidence Score:</h6>
+            {% set confidence_percent = (result.confidence * 100)|round(2) %}
+            <div class="progress" style="height: 40px">
+              <div
+                class="progress-bar bg-success"
+                role="progressbar"
+                aria-valuenow="{{ confidence_percent }}"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                style="width: {{ confidence_percent }}%"
+              >
+                <strong>{{ confidence_percent }}%</strong>
+              </div>
+            </div>
+            <p class="small text-muted mt-2 mb-0">
+              {% if result.confidence >= 0.8 %}
+              <i class="bi bi-emoji-smile text-success"></i> Confidence tinggi -
+              hasil sangat akurat {% elif result.confidence >= 0.6 %}
+              <i class="bi bi-emoji-neutral text-warning"></i> Confidence sedang
+              - hasil cukup akurat {% else %}
+              <i class="bi bi-emoji-frown text-danger"></i> Confidence rendah -
+              hasil kurang pasti {% endif %}
+            </p>
+          </div>
+        </div>
+
+        <hr />
+
+        <h6 class="text-muted">Kata Kunci Penting:</h6>
+        <div class="mb-3">
+          <small class="text-muted">
+            Kata-kata yang mempengaruhi klasifikasi (berdasarkan TF-IDF score):
+          </small>
+          <div class="mt-2">
+            {% for word_info in result.original_words[:20] %}
+            <span
+              class="badge bg-{% if result.label == 'RPL' %}primary{% else %}success{% endif %} me-1 mb-1"
+              title="Tampilan: '{{ word_info.display }}' | Stem: '{{ word_info.stem }}' | Variasi: {{ word_info.variations|join(', ') }} | TF-IDF: {{ '%.3f'|format(word_info.score) }}"
+              style="font-size: 0.9rem; font-weight: normal; cursor: help"
+            >
+              {{ word_info.display }} {% if word_info.variations|length > 1 %}
+              <small style="opacity: 0.8"
+                >({{ word_info.variations|length }})</small
+              >
+              {% endif %}
+            </span>
+            {% endfor %}
+          </div>
+          <small class="text-muted mt-1 d-block">
+            <i class="bi bi-info-circle"></i>
+            Angka dalam kurung menunjukkan jumlah variasi kata yang ditemukan.
+            Hover untuk detail lengkap.
+          </small>
+        </div>
+
+        <hr />
+
+        <h6 class="text-muted">Teks dengan Highlight:</h6>
+        <div
+          class="bg-light p-3 rounded"
+          style="max-height: 300px; overflow-y: auto; line-height: 1.8"
+        >
+          <div id="highlightedText" class="mb-0">{{ result.text }}</div>
+        </div>
+
+        <div class="alert alert-info mt-3">
+          <small>
+            <i class="bi bi-info-circle"></i>
+            <strong>Legend:</strong>
+            <span
+              class="badge bg-{% if result.label == 'RPL' %}primary{% else %}success{% endif %} ms-2"
+            >
+              {{ result.label }}
+            </span>
+            = Kata kunci yang mendukung klasifikasi {{ result.label }}
+          </small>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Info -->
+    <div class="card mt-4">
+      <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Tips</h5>
+      </div>
+      <div class="card-body">
+        <ul class="mb-0">
+          <li>Pastikan abstrak ditulis dalam Bahasa Indonesia yang baik</li>
+          <li>
+            Abstrak yang lebih panjang dan detail akan memberikan hasil lebih
+            akurat
+          </li>
+          <li>
+            Jika confidence score rendah (< 60%), pertimbangkan untuk verifikasi
+            manual
+          </li>
+          <li>
+            Model diklasifikasikan berdasarkan konten teknis dalam abstrak
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<style>
+  .keyword-rpl {
+    background-color: #cfe2ff;
+    color: #084298;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: 500;
+  }
+
+  .keyword-tkj {
+    background-color: #d1e7dd;
+    color: #0f5132;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: 500;
+  }
+
+  mark {
+    padding: 2px 4px;
+    border-radius: 3px;
+  }
+</style>
+
+{% if result %}
+<script type="application/json" id="classifyData">
+  {{ result|tojson|safe }}
+</script>
+{% endif %}
+
+<script>
+  // Highlight keywords in the text
+  function highlightKeywords() {
+    const textContainer = document.getElementById("highlightedText");
+    if (!textContainer) return;
+
+    // Get data from JSON script tag (clean, no Jinja2 syntax errors!)
+    const dataElement = document.getElementById("classifyData");
+    if (!dataElement) return;
+
+    const resultData = JSON.parse(dataElement.textContent);
+    const keywords = resultData.keyword_variations || [];
+    const label = resultData.label || "";
+
+    if (keywords.length === 0) return;
+
+    let text = textContainer.textContent;
+
+    // Remove duplicates
+    const uniqueKeywords = [...new Set(keywords)];
+
+    // Create a case-insensitive regex pattern for all keywords
+    // Escape special regex characters
+    const pattern = new RegExp(
+      "\\b(" +
+        uniqueKeywords
+          .map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+          .join("|") +
+        ")\\b",
+      "gi"
+    );
+
+    // Replace keywords with highlighted spans
+    const highlightedText = text.replace(pattern, function (match) {
+      const colorClass = label === "RPL" ? "keyword-rpl" : "keyword-tkj";
+      return '<mark class="' + colorClass + '">' + match + "</mark>";
+    });
+
+    textContainer.innerHTML = highlightedText;
+  }
+
+  // Run highlighting when page loads
+  window.addEventListener("DOMContentLoaded", function () {
+    highlightKeywords();
+  });
+
+  document
+    .getElementById("uploadForm")
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(e.target);
+      const resultDiv = document.getElementById("uploadResult");
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+
+      // Show loading
+      submitBtn.disabled = true;
+      submitBtn.innerHTML =
+        '<span class="spinner-border spinner-border-sm me-2"></span>Mengekstrak teks & mengklasifikasi...';
+
+      // Show progress message
+      resultDiv.innerHTML = `
+        <div class="alert alert-info">
+          <div class="d-flex align-items-center">
+            <div class="spinner-border spinner-border-sm me-3" role="status"></div>
+            <div>
+              <strong>Sedang memproses file...</strong><br>
+              <small>Ekstraksi teks → Preprocessing → Klasifikasi KNN</small>
+            </div>
+          </div>
+        </div>
+      `;
+      resultDiv.style.display = "block";
+
+      try {
+        const response = await fetch("/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          resultDiv.innerHTML = `
+                <div class="card border-success">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-check-circle"></i> Hasil Klasifikasi</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Kategori:</h6>
+                                <h2><span class="badge badge-${result.label.toLowerCase()}">${
+            result.label
+          }</span></h2>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Confidence:</h6>
+                                <div class="progress" style="height: 40px;">
+                                    <div class="progress-bar bg-success" style="width: ${
+                                      result.confidence * 100
+                                    }%;">
+                                        <strong>${(
+                                          result.confidence * 100
+                                        ).toFixed(2)}%</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+          resultDiv.style.display = "block";
+        } else {
+          resultDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> Error: ${result.error}
+                </div>
+            `;
+          resultDiv.style.display = "block";
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle"></i> Error: ${error.message}
+            </div>
+        `;
+        resultDiv.style.display = "block";
+      } finally {
+        // Reset button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML =
+          '<i class="bi bi-upload"></i> Upload dan Klasifikasi';
+
+        // Reset file input
+        e.target.reset();
+      }
+    });
+</script>
+{% endblock %}

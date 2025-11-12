@@ -1,0 +1,421 @@
+{% extends "base.html" %} {% block title %}Evaluasi Model - Klasifikasi Abstrak
+PTI{% endblock %} {% block content %}
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card bg-info text-white">
+      <div class="card-body">
+        <h2 class="mb-2"><i class="bi bi-graph-up"></i> Evaluasi Model KNN</h2>
+        <p class="mb-0">
+          Hasil evaluasi performa model klasifikasi dengan metrik Precision,
+          Recall, dan F1-Score.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if latest %}
+<div class="row mb-4">
+  <!-- Accuracy Card -->
+  <div class="col-md-3 mb-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <h6 class="text-muted mb-2">Accuracy</h6>
+        <h1 class="display-4 text-primary mb-0">
+          {{ "%.2f"|format(latest.accuracy * 100) }}<small class="fs-5"
+            >%</small
+          >
+        </h1>
+      </div>
+    </div>
+  </div>
+
+  <!-- K Value Card -->
+  <div class="col-md-3 mb-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <h6 class="text-muted mb-2">K Value</h6>
+        <h1 class="display-4 text-success mb-0">{{ latest.k_value }}</h1>
+      </div>
+    </div>
+  </div>
+
+  <!-- Training Samples Card -->
+  <div class="col-md-3 mb-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <h6 class="text-muted mb-2">Training Samples</h6>
+        <h1 class="display-4 text-warning mb-0">
+          {{ latest.training_samples }}
+        </h1>
+      </div>
+    </div>
+  </div>
+
+  <!-- Test Samples Card -->
+  <div class="col-md-3 mb-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <h6 class="text-muted mb-2">Test Samples</h6>
+        <h1 class="display-4 text-info mb-0">{{ latest.test_samples }}</h1>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Metrics per Class -->
+<div class="row mb-4">
+  <div class="col-md-6 mb-3">
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+          <i class="bi bi-code-square"></i> RPL (Rekayasa Perangkat Lunak)
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row text-center">
+          <div class="col-4">
+            <h6 class="text-muted small">Precision</h6>
+            <h3 class="text-primary">
+              {{ "%.2f"|format(latest.precision_rpl * 100) }}%
+            </h3>
+          </div>
+          <div class="col-4">
+            <h6 class="text-muted small">Recall</h6>
+            <h3 class="text-success">
+              {{ "%.2f"|format(latest.recall_rpl * 100) }}%
+            </h3>
+          </div>
+          <div class="col-4">
+            <h6 class="text-muted small">F1-Score</h6>
+            <h3 class="text-warning">
+              {{ "%.2f"|format(latest.f1_rpl * 100) }}%
+            </h3>
+          </div>
+        </div>
+
+        <hr />
+
+        <canvas id="rplChart" height="150"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6 mb-3">
+    <div class="card">
+      <div class="card-header bg-success text-white">
+        <h5 class="mb-0">
+          <i class="bi bi-hdd-network"></i> TKJ (Teknik Komputer dan Jaringan)
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row text-center">
+          <div class="col-4">
+            <h6 class="text-muted small">Precision</h6>
+            <h3 class="text-primary">
+              {{ "%.2f"|format(latest.precision_tkj * 100) }}%
+            </h3>
+          </div>
+          <div class="col-4">
+            <h6 class="text-muted small">Recall</h6>
+            <h3 class="text-success">
+              {{ "%.2f"|format(latest.recall_tkj * 100) }}%
+            </h3>
+          </div>
+          <div class="col-4">
+            <h6 class="text-muted small">F1-Score</h6>
+            <h3 class="text-warning">
+              {{ "%.2f"|format(latest.f1_tkj * 100) }}%
+            </h3>
+          </div>
+        </div>
+
+        <hr />
+
+        <canvas id="tkjChart" height="150"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Comparison Chart -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">
+          <i class="bi bi-bar-chart"></i> Perbandingan Metrik
+        </h5>
+      </div>
+      <div class="card-body">
+        <canvas id="comparisonChart" height="100"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Training History -->
+{% if history|length > 1 %}
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">
+          <i class="bi bi-clock-history"></i> Riwayat Training
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>K Value</th>
+                <th>Accuracy</th>
+                <th>Precision (RPL/TKJ)</th>
+                <th>Recall (RPL/TKJ)</th>
+                <th>F1-Score (RPL/TKJ)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for metric in history %}
+              <tr class="{{ 'table-primary' if loop.first else '' }}">
+                <td>
+                  {{ metric.trained_at.strftime('%Y-%m-%d %H:%M') }} {% if
+                  loop.first %}
+                  <span class="badge bg-success">Latest</span>
+                  {% endif %}
+                </td>
+                <td>{{ metric.k_value }}</td>
+                <td>{{ "%.2f"|format(metric.accuracy * 100) }}%</td>
+                <td>
+                  {{ "%.2f"|format(metric.precision_rpl * 100) }}% / {{
+                  "%.2f"|format(metric.precision_tkj * 100) }}%
+                </td>
+                <td>
+                  {{ "%.2f"|format(metric.recall_rpl * 100) }}% / {{
+                  "%.2f"|format(metric.recall_tkj * 100) }}%
+                </td>
+                <td>
+                  {{ "%.2f"|format(metric.f1_rpl * 100) }}% / {{
+                  "%.2f"|format(metric.f1_tkj * 100) }}%
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <canvas id="historyChart" height="80"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Metrics Explanation -->
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">
+          <i class="bi bi-question-circle"></i> Penjelasan Metrik
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-3">
+            <h6 class="text-primary">Accuracy</h6>
+            <p class="small">
+              Persentase prediksi yang benar dari keseluruhan data test.
+            </p>
+          </div>
+          <div class="col-md-3">
+            <h6 class="text-success">Precision</h6>
+            <p class="small">
+              Dari semua prediksi positif, berapa yang benar-benar positif.
+            </p>
+          </div>
+          <div class="col-md-3">
+            <h6 class="text-warning">Recall</h6>
+            <p class="small">
+              Dari semua data positif, berapa yang berhasil terdeteksi.
+            </p>
+          </div>
+          <div class="col-md-3">
+            <h6 class="text-info">F1-Score</h6>
+            <p class="small">Harmonic mean dari Precision dan Recall.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% else %}
+<div class="alert alert-warning">
+  <h4><i class="bi bi-exclamation-triangle"></i> Model Belum Di-train</h4>
+  <p class="mb-0">
+    Belum ada hasil evaluasi. Silakan
+    <a href="{{ url_for('train_model') }}" class="alert-link">train model</a>
+    terlebih dahulu.
+  </p>
+</div>
+{% endif %} {% endblock %} {% block extra_js %} {% if latest %}
+<script>
+  // Data dari server
+  const metricsData = {
+      rpl: {
+          precision: {{ latest.precision_rpl * 100 }},
+          recall: {{ latest.recall_rpl * 100 }},
+          f1: {{ latest.f1_rpl * 100 }}
+      },
+      tkj: {
+          precision: {{ latest.precision_tkj * 100 }},
+          recall: {{ latest.recall_tkj * 100 }},
+          f1: {{ latest.f1_tkj * 100 }}
+      }
+  };
+
+  // RPL Chart
+  const rplCtx = document.getElementById('rplChart').getContext('2d');
+  new Chart(rplCtx, {
+      type: 'bar',
+      data: {
+          labels: ['Precision', 'Recall', 'F1-Score'],
+          datasets: [{
+              label: 'RPL',
+              data: [
+                  metricsData.rpl.precision,
+                  metricsData.rpl.recall,
+                  metricsData.rpl.f1
+              ],
+              backgroundColor: [
+                  'rgba(37, 99, 235, 0.7)',
+                  'rgba(16, 185, 129, 0.7)',
+                  'rgba(245, 158, 11, 0.7)'
+              ]
+          }]
+      },
+      options: {
+          responsive: true,
+          scales: {
+              y: {
+                  beginAtZero: true,
+                  max: 100
+              }
+          }
+      }
+  });
+
+  // TKJ Chart
+  const tkjCtx = document.getElementById('tkjChart').getContext('2d');
+  new Chart(tkjCtx, {
+      type: 'bar',
+      data: {
+          labels: ['Precision', 'Recall', 'F1-Score'],
+          datasets: [{
+              label: 'TKJ',
+              data: [
+                  metricsData.tkj.precision,
+                  metricsData.tkj.recall,
+                  metricsData.tkj.f1
+              ],
+              backgroundColor: [
+                  'rgba(37, 99, 235, 0.7)',
+                  'rgba(16, 185, 129, 0.7)',
+                  'rgba(245, 158, 11, 0.7)'
+              ]
+          }]
+      },
+      options: {
+          responsive: true,
+          scales: {
+              y: {
+                  beginAtZero: true,
+                  max: 100
+              }
+          }
+      }
+  });
+
+  // Comparison Chart
+  const compCtx = document.getElementById('comparisonChart').getContext('2d');
+  new Chart(compCtx, {
+      type: 'radar',
+      data: {
+          labels: ['Precision', 'Recall', 'F1-Score'],
+          datasets: [
+              {
+                  label: 'RPL',
+                  data: [
+                      metricsData.rpl.precision,
+                      metricsData.rpl.recall,
+                      metricsData.rpl.f1
+                  ],
+                  borderColor: 'rgba(37, 99, 235, 1)',
+                  backgroundColor: 'rgba(37, 99, 235, 0.2)'
+              },
+              {
+                  label: 'TKJ',
+                  data: [
+                      metricsData.tkj.precision,
+                      metricsData.tkj.recall,
+                      metricsData.tkj.f1
+                  ],
+                  borderColor: 'rgba(16, 185, 129, 1)',
+                  backgroundColor: 'rgba(16, 185, 129, 0.2)'
+              }
+          ]
+      },
+      options: {
+          responsive: true,
+          scales: {
+              r: {
+                  beginAtZero: true,
+                  max: 100
+              }
+          }
+      }
+  });
+
+  {% if history|length > 1 %}
+  // History data
+  const historyLabels = [
+      {% for metric in history|reverse %}
+          '{{ metric.trained_at.strftime("%m/%d %H:%M") }}'{% if not loop.last %},{% endif %}
+      {% endfor %}
+  ];
+  const historyData = [
+      {% for metric in history|reverse %}
+          {{ metric.accuracy * 100 }}{% if not loop.last %},{% endif %}
+      {% endfor %}
+  ];
+
+  // History Chart
+  const historyCtx = document.getElementById('historyChart').getContext('2d');
+  new Chart(historyCtx, {
+      type: 'line',
+      data: {
+          labels: historyLabels,
+          datasets: [{
+              label: 'Accuracy',
+              data: historyData,
+              borderColor: 'rgba(37, 99, 235, 1)',
+              backgroundColor: 'rgba(37, 99, 235, 0.1)',
+              tension: 0.4
+          }]
+      },
+      options: {
+          responsive: true,
+          scales: {
+              y: {
+                  beginAtZero: true,
+                  max: 100
+              }
+          }
+      }
+  });
+  {% endif %}
+</script>
+{% endif %} {% endblock %}

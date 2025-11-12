@@ -1,0 +1,5 @@
+Ini adalah contoh abstrak untuk testing upload file.
+
+Penelitian ini membahas pengembangan sistem informasi akademik berbasis web menggunakan framework Laravel dan database MySQL. Sistem dirancang dengan arsitektur MVC untuk memudahkan maintenance dan scalability.
+
+Implementasi dilakukan dengan metodologi Agile dan pengujian menggunakan black box testing untuk memastikan semua fitur berfungsi dengan baik. Hasil pengujian menunjukkan sistem berhasil memenuhi kebutuhan user dengan tingkat usability yang tinggi.

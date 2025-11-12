@@ -1,0 +1,9 @@
+# models/
+# Folder ini akan berisi trained model files
+*.joblib
+*.pkl
+
+# File akan dibuat otomatis saat training:
+# - knn_classifier.joblib
+# - tfidf_vectorizer.joblib
+# - model_metadata.joblib

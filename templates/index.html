@@ -1,0 +1,249 @@
+{% extends "base.html" %} {% block title %}Beranda - Klasifikasi Abstrak PTI{%
+endblock %} {% block content %}
+<div class="row mb-4">
+  <div class="col-12">
+    <h1 class="display-5 fw-bold mb-3">
+      <i class="bi bi-file-text text-primary"></i>
+      Klasifikasi Abstrak Tugas Akhir Mahasiswa PTI
+    </h1>
+    <p class="lead text-muted">
+      Menggunakan metode K-Nearest Neighbor (KNN) untuk mengklasifikasikan
+      abstrak ke dalam kategori
+      <span class="badge badge-rpl">RPL</span> atau
+      <span class="badge badge-tkj">TKJ</span>
+    </p>
+  </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+  <div class="col-md-3 mb-3">
+    <div class="card stat-card total">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-muted mb-2">Total Data Latih</h6>
+            <h2 class="mb-0">{{ stats.total }}</h2>
+          </div>
+          <div class="text-primary">
+            <i class="bi bi-file-earmark-text" style="font-size: 2.5rem"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3 mb-3">
+    <div class="card stat-card rpl">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-muted mb-2">RPL</h6>
+            <h2 class="mb-0">{{ stats.rpl }}</h2>
+          </div>
+          <div class="text-primary">
+            <i class="bi bi-code-square" style="font-size: 2.5rem"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3 mb-3">
+    <div class="card stat-card tkj">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-muted mb-2">TKJ</h6>
+            <h2 class="mb-0">{{ stats.tkj }}</h2>
+          </div>
+          <div class="text-success">
+            <i class="bi bi-hdd-network" style="font-size: 2.5rem"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3 mb-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-muted mb-2">Data Labeled</h6>
+            <h2 class="mb-0">{{ stats.labeled }}</h2>
+          </div>
+          <div class="text-warning">
+            <i class="bi bi-tags" style="font-size: 2.5rem"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title mb-3">
+          <i class="bi bi-lightning"></i> Quick Actions
+        </h5>
+        <div class="d-flex flex-wrap gap-2">
+          <a href="{{ url_for('scrape') }}" class="btn btn-primary">
+            <i class="bi bi-download"></i> Scraping Data
+          </a>
+          <a href="{{ url_for('label_data') }}" class="btn btn-info text-white">
+            <i class="bi bi-tags"></i> Label Data
+          </a>
+          <a href="{{ url_for('train_model') }}" class="btn btn-success">
+            <i class="bi bi-gear"></i> Train Model
+          </a>
+          <a
+            href="{{ url_for('classify') }}"
+            class="btn btn-warning text-white"
+          >
+            <i class="bi bi-lightning"></i> Klasifikasi Baru
+          </a>
+          <button class="btn btn-secondary" onclick="classifyAll()">
+            <i class="bi bi-collection"></i> Klasifikasi Semua
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Abstracts List -->
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header bg-white">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="bi bi-list"></i> Daftar Abstrak</h5>
+          <span class="badge bg-secondary">{{ pagination.total }} total</span>
+        </div>
+      </div>
+      <div class="card-body">
+        {% if abstracts %}
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th width="5%">#</th>
+                <th width="40%">Judul</th>
+                <th width="20%">Penulis</th>
+                <th width="8%">Tahun</th>
+                <th width="12%">Label</th>
+                <th width="10%">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for abstract in abstracts %}
+              <tr>
+                <td>{{ abstract.id }}</td>
+                <td>
+                  <strong>{{ abstract.title[:80] }}...</strong>
+                </td>
+                <td><small>{{ abstract.author[:40] }}...</small></td>
+                <td>{{ abstract.year }}</td>
+                <td>
+                  {% if abstract.label %}
+                  <span class="badge badge-{{ abstract.label.lower() }}"
+                    >{{ abstract.label }}</span
+                  >
+                  {% else %}
+                  <span class="badge bg-secondary">Belum Dilabel</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a
+                    href="{{ url_for('view_abstract', abstract_id=abstract.id) }}"
+                    class="btn btn-sm btn-outline-primary"
+                  >
+                    <i class="bi bi-eye"></i>
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if pagination.pages > 1 %}
+        <nav aria-label="Page navigation">
+          <ul class="pagination justify-content-center">
+            {% if pagination.has_prev %}
+            <li class="page-item">
+              <a
+                class="page-link"
+                href="{{ url_for('index', page=pagination.prev_num) }}"
+                >Previous</a
+              >
+            </li>
+            {% endif %} {% for page_num in pagination.iter_pages(left_edge=1,
+            right_edge=1, left_current=2, right_current=2) %} {% if page_num %}
+            <li
+              class="page-item {{ 'active' if page_num == pagination.page else '' }}"
+            >
+              <a class="page-link" href="{{ url_for('index', page=page_num) }}"
+                >{{ page_num }}</a
+              >
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+              <span class="page-link">...</span>
+            </li>
+            {% endif %} {% endfor %} {% if pagination.has_next %}
+            <li class="page-item">
+              <a
+                class="page-link"
+                href="{{ url_for('index', page=pagination.next_num) }}"
+                >Next</a
+              >
+            </li>
+            {% endif %}
+          </ul>
+        </nav>
+        {% endif %} {% else %}
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle"></i>
+          Belum ada data abstrak. Silakan lakukan
+          <a href="{{ url_for('scrape') }}">scraping</a> terlebih dahulu.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  async function classifyAll() {
+    if (!confirm("Klasifikasi semua abstrak yang belum diklasifikasi?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/classify-all", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert(result.message);
+        location.reload();
+      } else {
+        alert("Error: " + (result.error || "Unknown error"));
+      }
+    } catch (error) {
+      alert("Error: " + error.message);
+    }
+  }
+</script>
+{% endblock %}

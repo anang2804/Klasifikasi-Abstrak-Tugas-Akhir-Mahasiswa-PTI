@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {% block title %}Klasifikasi Abstrak Tugas Akhir PTI{% endblock %}
+    </title>
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Bootstrap Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"
+    />
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <style>
+      :root {
+        --primary-color: #2563eb;
+        --secondary-color: #7c3aed;
+        --success-color: #10b981;
+        --danger-color: #ef4444;
+        --warning-color: #f59e0b;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f8fafc;
+      }
+
+      .navbar {
+        background: linear-gradient(
+          135deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .navbar-brand {
+        font-weight: 700;
+        font-size: 1.25rem;
+      }
+
+      .card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .badge-rpl {
+        background-color: var(--primary-color);
+      }
+
+      .badge-tkj {
+        background-color: var(--success-color);
+      }
+
+      .stat-card {
+        border-left: 4px solid;
+      }
+
+      .stat-card.total {
+        border-left-color: var(--primary-color);
+      }
+
+      .stat-card.rpl {
+        border-left-color: var(--secondary-color);
+      }
+
+      .stat-card.tkj {
+        border-left-color: var(--success-color);
+      }
+
+      .btn-primary {
+        background: linear-gradient(
+          135deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        border: none;
+      }
+
+      .btn-primary:hover {
+        opacity: 0.9;
+      }
+
+      .abstract-text {
+        max-height: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 5;
+        -webkit-box-orient: vertical;
+      }
+
+      footer {
+        background-color: #1e293b;
+        color: #94a3b8;
+        padding: 2rem 0;
+        margin-top: 4rem;
+      }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+      <div class="container">
+        <a class="navbar-brand" href="{{ url_for('index') }}">
+          <i class="bi bi-file-text"></i> Klasifikasi Abstrak PTI
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('index') }}">
+                <i class="bi bi-house"></i> Beranda
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('scrape') }}">
+                <i class="bi bi-download"></i> Scraping
+              </a>
+            </li>
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                id="dataDropdown"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <i class="bi bi-database"></i> Data
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="dataDropdown">
+                <li>
+                  <a class="dropdown-item" href="{{ url_for('label_data') }}">
+                    <i class="bi bi-tags"></i> Data Latih
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{{ url_for('data_test') }}">
+                    <i class="bi bi-clipboard-data"></i> Data Uji
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('train_model') }}">
+                <i class="bi bi-gear"></i> Training
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('classify') }}">
+                <i class="bi bi-lightning"></i> Klasifikasi
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('evaluation') }}">
+                <i class="bi bi-graph-up"></i> Evaluasi
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <div class="container mt-3">
+      {% for category, message in messages %}
+      <div
+        class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show"
+        role="alert"
+      >
+        {{ message }}
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+        ></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %} {% endwith %}
+
+    <!-- Main Content -->
+    <main class="container my-4">{% block content %}{% endblock %}</main>
+
+    <!-- Footer -->
+    <footer>
+      <div class="container text-center">
+        <p class="mb-2">
+          <strong>Klasifikasi Abstrak Tugas Akhir Mahasiswa PTI</strong><br />
+          Menggunakan K-Nearest Neighbor (KNN)
+        </p>
+        <p class="small mb-0">
+          Referensi: Alfian Sukma, Badrus Zaman, Endah Purwanti (2015)<br />
+          "Klasifikasi Dokumen Temu Kembali Informasi dengan K-Nearest Neighbor"
+        </p>
+      </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

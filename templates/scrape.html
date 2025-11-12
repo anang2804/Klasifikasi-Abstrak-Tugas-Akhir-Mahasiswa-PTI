@@ -1,0 +1,179 @@
+{% extends "base.html" %} {% block title %}Scraping Data - Klasifikasi Abstrak
+PTI{% endblock %} {% block content %}
+<div class="row">
+  <div class="col-md-8 mx-auto">
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="bi bi-download"></i> Web Scraping Data</h4>
+      </div>
+      <div class="card-body">
+        <p class="text-muted">
+          Scraping data abstrak tugas akhir dari ejournal.unesa.ac.id (IT-Edu
+          Journal). Proses ini akan mengambil judul, penulis, tahun, dan isi
+          abstrak.
+        </p>
+
+        <form method="POST" action="{{ url_for('scrape') }}">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="start_year" class="form-label">Tahun Mulai</label>
+              <input
+                type="number"
+                class="form-control"
+                id="start_year"
+                name="start_year"
+                value="2024"
+                min="2000"
+                max="2025"
+                required
+              />
+              <div class="form-text">Tahun awal scraping</div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="end_year" class="form-label">Tahun Akhir</label>
+              <input
+                type="number"
+                class="form-control"
+                id="end_year"
+                name="end_year"
+                value="2024"
+                min="2000"
+                max="2025"
+                required
+              />
+              <div class="form-text">Tahun akhir scraping</div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="btn-group w-100" role="group">
+              <button
+                type="button"
+                class="btn btn-outline-primary"
+                onclick="setYear(2024, 2024)"
+              >
+                2024 Saja
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-primary"
+                onclick="setYear(2023, 2024)"
+              >
+                2023-2024
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-primary"
+                onclick="setYear(2020, 2024)"
+              >
+                2020-2024
+              </button>
+            </div>
+            <div class="form-text text-center mt-2">
+              Klik untuk mengisi cepat
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle"></i>
+              <strong>Info:</strong> Setelah scraping selesai, data akan
+              tersimpan tanpa label. Anda bisa melakukan auto-label di
+              <a href="{{ url_for('label_data') }}" class="alert-link"
+                >halaman labeling</a
+              >
+              dengan klik tombol <strong>"Auto-Label Semua"</strong>.
+            </div>
+          </div>
+
+          <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong>Perhatian:</strong> Proses scraping membutuhkan waktu
+            beberapa menit tergantung jumlah data. Harap bersabar dan jangan
+            menutup halaman ini.
+          </div>
+
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary btn-lg">
+              <i class="bi bi-download"></i> Mulai Scraping
+            </button>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left"></i> Kembali
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card mt-4">
+      <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informasi</h5>
+      </div>
+      <div class="card-body">
+        <h6>Sumber Data:</h6>
+        <p class="mb-2">
+          <a
+            href="https://ejournal.unesa.ac.id/index.php/it-edu"
+            target="_blank"
+            class="text-decoration-none"
+          >
+            https://ejournal.unesa.ac.id/index.php/it-edu
+            <i class="bi bi-box-arrow-up-right"></i>
+          </a>
+        </p>
+
+        <h6 class="mt-3">Data yang Diambil:</h6>
+        <ul>
+          <li>Judul artikel</li>
+          <li>Nama penulis</li>
+          <li>Tahun publikasi</li>
+          <li>Isi abstrak</li>
+          <li>URL artikel</li>
+        </ul>
+
+        <h6 class="mt-3">Catatan:</h6>
+        <ul>
+          <li>
+            Data yang sudah ada (berdasarkan judul dan tahun) tidak akan
+            diduplikasi
+          </li>
+          <li>Setelah scraping, data akan tersimpan tanpa label</li>
+          <li>
+            Untuk melabel data, buka halaman
+            <strong>Label Data Training</strong>
+          </li>
+          <li>
+            Gunakan tombol <strong>"Auto-Label Semua"</strong> untuk label
+            otomatis
+          </li>
+        </ul>
+
+        <div class="alert alert-success mt-3">
+          <h6 class="alert-heading">
+            <i class="bi bi-lightbulb"></i> Alur Kerja:
+          </h6>
+          <small>
+            <ol class="mb-0">
+              <li>Scraping data dari ejournal</li>
+              <li>Buka halaman <strong>Label Data Training</strong></li>
+              <li>
+                Klik tombol <strong>"Auto-Label Semua"</strong> (jika model
+                sudah di-train)
+              </li>
+              <li>Atau label manual untuk data training</li>
+            </ol>
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  function setYear(startYear, endYear) {
+    document.getElementById("start_year").value = startYear;
+    document.getElementById("end_year").value = endYear;
+  }
+</script>
+{% endblock %}

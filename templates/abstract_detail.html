@@ -1,0 +1,115 @@
+{% extends "base.html" %} {% block title %}Detail Abstrak - {{ abstract.title
+}}{% endblock %} {% block content %}
+<div class="row">
+  <div class="col-lg-10 mx-auto">
+    <div class="mb-3">
+      <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Kembali
+      </a>
+    </div>
+
+    <div class="card">
+      <div class="card-header bg-white">
+        <h3 class="mb-0">{{ abstract.title }}</h3>
+      </div>
+      <div class="card-body">
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <p class="mb-2">
+              <strong><i class="bi bi-person"></i> Penulis:</strong><br />
+              {{ abstract.author }}
+            </p>
+            <p class="mb-2">
+              <strong><i class="bi bi-calendar"></i> Tahun:</strong><br />
+              {{ abstract.year }}
+            </p>
+          </div>
+          <div class="col-md-6">
+            <p class="mb-2">
+              <strong><i class="bi bi-tag"></i> Label Asli:</strong><br />
+              {% if abstract.label %}
+              <span
+                class="badge badge-{{ abstract.label.lower() }}"
+                style="font-size: 1rem"
+              >
+                {{ abstract.label }}
+              </span>
+              {% else %}
+              <span class="badge bg-secondary">Belum dilabel</span>
+              {% endif %}
+            </p>
+            <p class="mb-2">
+              <strong><i class="bi bi-lightning"></i> Prediksi:</strong><br />
+              {% if abstract.predicted_label %}
+              <span
+                class="badge badge-{{ abstract.predicted_label.lower() }}"
+                style="font-size: 1rem"
+              >
+                {{ abstract.predicted_label }}
+              </span>
+              <br />
+              <small class="text-muted">
+                Confidence: {{ "%.2f"|format(abstract.confidence * 100) }}%
+              </small>
+              {% else %}
+              <span class="badge bg-secondary">Belum diklasifikasi</span>
+              {% endif %}
+            </p>
+          </div>
+        </div>
+
+        {% if abstract.url %}
+        <p class="mb-3">
+          <strong><i class="bi bi-link"></i> URL:</strong><br />
+          <a
+            href="{{ abstract.url }}"
+            target="_blank"
+            class="text-decoration-none"
+          >
+            {{ abstract.url }}
+            <i class="bi bi-box-arrow-up-right"></i>
+          </a>
+        </p>
+        {% endif %}
+
+        <hr />
+
+        <h5 class="mb-3"><i class="bi bi-file-text"></i> Abstrak</h5>
+        <div class="bg-light p-4 rounded" style="text-align: justify">
+          {{ abstract.abstract_text }}
+        </div>
+
+        <hr />
+
+        <div class="row">
+          <div class="col-md-6">
+            <p class="small text-muted mb-0">
+              <i class="bi bi-clock"></i> Ditambahkan: {{
+              abstract.created_at.strftime('%Y-%m-%d %H:%M') if
+              abstract.created_at else '-' }}
+            </p>
+          </div>
+          <div class="col-md-6 text-end">
+            {% if not abstract.predicted_label %}
+            <button class="btn btn-warning btn-sm" onclick="classifySingle()">
+              <i class="bi bi-lightning"></i> Klasifikasi Abstrak Ini
+            </button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  async function classifySingle() {
+    if (!confirm("Klasifikasi abstrak ini?")) {
+      return;
+    }
+
+    // You can implement single classification API if needed
+    alert("Feature coming soon!");
+  }
+</script>
+{% endblock %}

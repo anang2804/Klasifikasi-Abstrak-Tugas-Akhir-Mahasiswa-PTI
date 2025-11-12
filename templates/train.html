@@ -1,0 +1,202 @@
+{% extends "base.html" %} {% block title %}Train Model - Klasifikasi Abstrak
+PTI{% endblock %} {% block content %}
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card bg-success text-white">
+      <div class="card-body">
+        <h2 class="mb-2"><i class="bi bi-gear"></i> Train Model KNN</h2>
+        <p class="mb-0">
+          Latih model K-Nearest Neighbor menggunakan data yang sudah dilabel.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-8 mx-auto">
+    <div class="card mb-4">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">
+          <i class="bi bi-info-circle"></i> Status Data Training
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row text-center mb-3">
+          <div class="col-md-6 mb-3">
+            <div class="p-4 border rounded bg-success bg-opacity-10">
+              <h2 class="text-success mb-1">{{ training_count }}</h2>
+              <p class="text-muted mb-0">
+                <strong>Data Latih</strong>
+              </p>
+              <small class="text-muted"
+                >(Hasil Scraping & Labeling Otomatis)</small
+              >
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <div class="p-4 border rounded bg-info bg-opacity-10">
+              <h2 class="text-info mb-1">{{ test_count }}</h2>
+              <p class="text-muted mb-0">
+                <strong>Data Uji</strong>
+              </p>
+              <small class="text-muted">(Dari Menu Klasifikasi)</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-info mb-3">
+          <i class="bi bi-lightbulb"></i>
+          <strong>Alur Data:</strong> Data hasil scraping otomatis di-label
+          menggunakan kata kunci berbobot. Data berlabel ini ({{ training_count
+          }} data) digunakan sebagai <strong>Data Latih</strong>.
+          <strong>Data Uji</strong> ({{ test_count }} data) diperoleh dari input
+          klasifikasi di menu Klasifikasi.
+        </div>
+
+        {% if training_count < 10 %}
+        <div class="alert alert-warning">
+          <i class="bi bi-exclamation-triangle"></i>
+          <strong>Perhatian:</strong> Minimal 10 data latih diperlukan. Saat ini
+          baru ada {{ training_count }} data.
+          <br />
+          <a href="{{ url_for('scrape') }}" class="alert-link">
+            Lakukan scraping data atau cek halaman Label Data.
+          </a>
+        </div>
+        {% else %}
+        <div class="alert alert-success">
+          <i class="bi bi-check-circle"></i>
+          Data latih cukup! Anda memiliki {{ training_count }} data untuk
+          melatih model.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if training_count >= 10 %}
+    <div class="card">
+      <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-sliders"></i> Konfigurasi Training</h5>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('train_model') }}">
+          <div class="mb-3">
+            <label for="k_value" class="form-label">
+              <strong>Nilai K</strong> (Jumlah Tetangga Terdekat)
+            </label>
+            <input
+              type="number"
+              class="form-control"
+              id="k_value"
+              name="k_value"
+              value="5"
+              min="1"
+              max="20"
+              required
+            />
+            <div class="form-text">
+              Nilai K optimal biasanya antara 3-7. Nilai ganjil disarankan untuk
+              menghindari voting seri.
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="card bg-light">
+              <div class="card-body">
+                <h6 class="card-title">
+                  <i class="bi bi-diagram-3"></i> Pipeline Training:
+                </h6>
+                <ol class="mb-0 small">
+                  <li>
+                    <strong>Data Selection:</strong> Ambil semua data berlabel
+                    ({{ training_count }} data latih)
+                  </li>
+                  <li>
+                    <strong>Preprocessing:</strong> Case folding → Tokenisasi →
+                    Stopword Removal → Stemming (Sastrawi)
+                  </li>
+                  <li>
+                    <strong>Feature Extraction:</strong> TF-IDF Vectorization
+                    (max_features=1000, ngram=(1,2))
+                  </li>
+                  <li>
+                    <strong>Train/Test Split:</strong> 80% Training, 20% Testing
+                    (Stratified)
+                  </li>
+                  <li>
+                    <strong>Model Training:</strong> K-Nearest Neighbor (KNN)
+                    dengan Cosine Distance
+                  </li>
+                  <li>
+                    <strong>Evaluation:</strong> Accuracy, Precision, Recall,
+                    F1-Score, Confusion Matrix
+                  </li>
+                  <li>
+                    <strong>Model Saving:</strong> Simpan model ke folder
+                    models/
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert alert-info">
+            <i class="bi bi-clock-history"></i>
+            <strong>Estimasi Waktu:</strong> Proses training membutuhkan sekitar
+            30 detik - 1 menit tergantung jumlah data.
+          </div>
+
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-success btn-lg">
+              <i class="bi bi-play-circle-fill"></i> Mulai Training Model
+            </button>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left"></i> Kembali
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="card mt-4">
+      <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-book"></i> Tentang KNN</h5>
+      </div>
+      <div class="card-body">
+        <h6>K-Nearest Neighbor (KNN)</h6>
+        <p>
+          KNN adalah algoritma klasifikasi yang menentukan kelas suatu data
+          berdasarkan mayoritas kelas dari k tetangga terdekatnya. Dalam konteks
+          klasifikasi dokumen:
+        </p>
+        <ol>
+          <li>
+            <strong>Text Preprocessing:</strong> Membersihkan dan menormalisasi
+            teks
+          </li>
+          <li>
+            <strong>Feature Extraction (TF-IDF):</strong> Mengkonversi teks
+            menjadi vektor numerik
+          </li>
+          <li>
+            <strong>Similarity Calculation:</strong> Menghitung kemiripan dengan
+            cosine similarity
+          </li>
+          <li>
+            <strong>Classification:</strong> Voting berdasarkan k-tetangga
+            terdekat
+          </li>
+        </ol>
+
+        <h6 class="mt-3">Referensi:</h6>
+        <p class="small mb-0">
+          Alfian Sukma, Badrus Zaman, Endah Purwanti (2015). "Klasifikasi
+          Dokumen Temu Kembali Informasi dengan K-Nearest Neighbor"
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

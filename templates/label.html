@@ -1,0 +1,307 @@
+{% extends "base.html" %} {% block title %}Label Data - Klasifikasi Abstrak
+PTI{% endblock %} {% block content %}
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card bg-primary text-white">
+      <div class="card-body">
+        <h2 class="mb-2"><i class="bi bi-tags"></i> Label Data Training</h2>
+        <p class="mb-0">
+          Berikan label manual (RPL atau TKJ) pada data abstrak untuk dijadikan
+          data training.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-4">
+            <div class="text-center">
+              <h3 class="text-success">{{ labeled_count }}</h3>
+              <p class="text-muted mb-0">Data Berlabel</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="text-center">
+              <h3 class="text-warning">
+                {{ unlabeled_total if unlabeled_total is defined else
+                abstracts|length }}
+              </h3>
+              <p class="text-muted mb-0">Belum Berlabel (total)</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="text-center">
+              <div class="progress" style="height: 30px">
+                {% set total_unlabeled = unlabeled_total if unlabeled_total is
+                defined else abstracts|length %} {% set progress =
+                (labeled_count / (labeled_count + total_unlabeled) * 100) if
+                (labeled_count + total_unlabeled) > 0 else 0 %}
+                <div
+                  class="progress-bar bg-success"
+                  role="progressbar"
+                  style="width: {{ progress }}%;"
+                  aria-valuenow="{{ progress }}"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                >
+                  {{ "%.1f"|format(progress) }}%
+                </div>
+              </div>
+              <p class="text-muted mb-0 mt-2">Progress Labeling</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-info-circle"></i> Panduan Labeling</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <h6 class="text-primary">
+              <i class="bi bi-code-square"></i> RPL (Rekayasa Perangkat Lunak)
+            </h6>
+            <p class="small">Pilih RPL jika abstrak membahas tentang:</p>
+            <ul class="small">
+              <li>Pengembangan aplikasi/software</li>
+              <li>Web development, mobile app</li>
+              <li>Sistem informasi</li>
+              <li>Basis data, algoritma</li>
+              <li>UI/UX, game development</li>
+              <li>Machine learning, AI</li>
+            </ul>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-success">
+              <i class="bi bi-hdd-network"></i> TKJ (Teknik Komputer dan
+              Jaringan)
+            </h6>
+            <p class="small">Pilih TKJ jika abstrak membahas tentang:</p>
+            <ul class="small">
+              <li>Jaringan komputer</li>
+              <li>Keamanan jaringan, cybersecurity</li>
+              <li>Hardware, embedded system</li>
+              <li>IoT (Internet of Things)</li>
+              <li>Cloud computing, server</li>
+              <li>Network infrastructure</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if abstracts %} {% for abstract in abstracts %}
+<div class="card mb-3 abstract-card" id="abstract-{{ abstract.id }}">
+  <div class="card-body">
+    <h5 class="card-title">{{ abstract.title }}</h5>
+    <p class="text-muted small">
+      <i class="bi bi-person"></i> {{ abstract.author }} |
+      <i class="bi bi-calendar"></i> {{ abstract.year }}
+    </p>
+    <div class="abstract-text-full">
+      <p class="card-text">{{ abstract.abstract_text }}</p>
+    </div>
+    <hr />
+    <div class="d-flex gap-2 justify-content-end">
+      <button
+        class="btn btn-primary"
+        data-id="{{ abstract.id }}"
+        onclick="labelAbstract(this.dataset.id, 'RPL')"
+      >
+        <i class="bi bi-code-square"></i> Label sebagai RPL
+      </button>
+      <button
+        class="btn btn-success"
+        data-id="{{ abstract.id }}"
+        onclick="labelAbstract(this.dataset.id, 'TKJ')"
+      >
+        <i class="bi bi-hdd-network"></i> Label sebagai TKJ
+      </button>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- Pagination -->
+{% if pagination and pagination.pages > 1 %}
+<nav aria-label="Page navigation" class="my-4">
+  <ul class="pagination justify-content-center">
+    {% if pagination.has_prev %}
+    <li class="page-item">
+      <a
+        class="page-link"
+        href="{{ url_for('label_data', page=pagination.prev_num) }}"
+      >
+        <i class="bi bi-chevron-left"></i> Previous
+      </a>
+    </li>
+    {% else %}
+    <li class="page-item disabled">
+      <span class="page-link"><i class="bi bi-chevron-left"></i> Previous</span>
+    </li>
+    {% endif %} {% for page_num in pagination.iter_pages(left_edge=1,
+    right_edge=1, left_current=2, right_current=2) %} {% if page_num %}
+    <li class="page-item {{ 'active' if page_num == pagination.page else '' }}">
+      <a class="page-link" href="{{ url_for('label_data', page=page_num) }}"
+        >{{ page_num }}</a
+      >
+    </li>
+    {% else %}
+    <li class="page-item disabled">
+      <span class="page-link">...</span>
+    </li>
+    {% endif %} {% endfor %} {% if pagination.has_next %}
+    <li class="page-item">
+      <a
+        class="page-link"
+        href="{{ url_for('label_data', page=pagination.next_num) }}"
+      >
+        Next <i class="bi bi-chevron-right"></i>
+      </a>
+    </li>
+    {% else %}
+    <li class="page-item disabled">
+      <span class="page-link">Next <i class="bi bi-chevron-right"></i></span>
+    </li>
+    {% endif %}
+  </ul>
+  <p class="text-center text-muted">
+    Halaman {{ pagination.page }} dari {{ pagination.pages }} (Menampilkan {{
+    abstracts|length }} dari {{ unlabeled_total }} data)
+  </p>
+</nav>
+{% endif %} {% else %}
+<div class="alert alert-success">
+  <h4><i class="bi bi-check-circle"></i> Semua data sudah dilabel!</h4>
+  <p class="mb-0">
+    Anda sudah melabeli semua data yang tersedia. Silakan lanjut ke
+    <a href="{{ url_for('train_model') }}" class="alert-link"
+      >halaman training</a
+    >
+    untuk melatih model.
+  </p>
+</div>
+{% endif %}
+
+<div class="text-center my-4">
+  <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Kembali ke Beranda
+  </a>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  async function labelAbstract(abstractId, label) {
+    try {
+      const response = await fetch(`/api/label/${abstractId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ label: label }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Remove the card with animation
+        const card = document.getElementById(`abstract-${abstractId}`);
+        card.style.transition = "opacity 0.3s";
+        card.style.opacity = "0";
+
+        setTimeout(() => {
+          card.remove();
+
+          // Check if no more cards
+          if (document.querySelectorAll(".abstract-card").length === 0) {
+            location.reload();
+          }
+        }, 300);
+
+        // Show success message
+        showToast(`Berhasil melabel sebagai ${label}`, "success");
+      } else {
+        showToast("Error: " + (result.error || "Unknown error"), "error");
+      }
+    } catch (error) {
+      showToast("Error: " + error.message, "error");
+    }
+  }
+
+  async function autoLabelAll() {
+    const btn = document.getElementById("autoLabelBtn");
+    const originalHtml = btn.innerHTML;
+
+    if (
+      !confirm(
+        "Auto-label semua data yang belum berlabel?\n\nProses ini akan menggunakan model KNN untuk memprediksi label secara otomatis."
+      )
+    ) {
+      return;
+    }
+
+    // Disable button and show loading
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Memproses...';
+
+    try {
+      const response = await fetch("/api/auto-label-unlabeled", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        showToast(
+          `✅ Berhasil! ${result.labeled} data dilabel (RPL: ${result.rpl_count}, TKJ: ${result.tkj_count})`,
+          "success"
+        );
+
+        // Reload page after 2 seconds
+        setTimeout(() => {
+          location.reload();
+        }, 2000);
+      } else {
+        showToast("Error: " + (result.error || "Unknown error"), "error");
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+      }
+    } catch (error) {
+      showToast("Error: " + error.message, "error");
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
+  }
+
+  function showToast(message, type) {
+    // Simple toast notification
+    const toast = document.createElement("div");
+    toast.className = `alert alert-${
+      type === "error" ? "danger" : "success"
+    } position-fixed top-0 end-0 m-3`;
+    toast.style.zIndex = "9999";
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  }
+</script>
+{% endblock %}
