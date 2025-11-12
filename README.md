@@ -10,23 +10,26 @@ Website ini mengklasifikasikan abstrak tugas akhir mahasiswa Program Studi PTI k
 ## Fitur Utama
 
 - ✅ Web scraping otomatis dari ejournal.unesa.ac.id (2020-2025)
-- ✅ **Auto-label data hasil scraping** menggunakan model yang sudah di-train
-- ✅ **Auto-label semua data existing** yang belum berlabel dengan satu klik
-- ✅ Preprocessing teks Bahasa Indonesia (tokenisasi, stopword removal, stemming)
-- ✅ Feature extraction menggunakan TF-IDF
-- ✅ Klasifikasi dokumen menggunakan algoritma K-Nearest Neighbor (KNN)
-- ✅ Evaluasi model dengan metrik Precision, Recall, dan F1-Score
-- ✅ Visualisasi hasil klasifikasi dalam bentuk grafik
-- ✅ Upload dan klasifikasi abstrak baru
+- ✅ **Auto-labeling dengan keyword scoring** (130+ keywords: 60 TKJ, 70 RPL dengan bobot 1-3)
+- ✅ **Smart abstract extraction** - hanya ekstrak bagian abstrak dari PDF/DOCX (bukan seluruh dokumen)
+- ✅ **Tracking data uji terpisah** - ClassificationHistory untuk hasil klasifikasi
+- ✅ Preprocessing teks Bahasa Indonesia (tokenisasi, stopword removal, stemming Sastrawi)
+- ✅ Feature extraction dengan TF-IDF (sesuai rumus matematis TF-IDF)
+- ✅ Klasifikasi dokumen menggunakan algoritma K-Nearest Neighbor (KNN, k=5, cosine similarity)
+- ✅ Upload file multi-format (TXT, PDF, DOCX) dengan ekstraksi otomatis
+- ✅ Evaluasi model dengan metrik Precision, Recall, F1-Score, dan Confusion Matrix
+- ✅ Visualisasi hasil klasifikasi dalam bentuk grafik dan statistik
+- ✅ Dokumentasi lengkap rumus matematis dan implementasi
 
 ## Teknologi
 
-- **Backend**: Flask (Python)
-- **Machine Learning**: scikit-learn
-- **Text Processing**: Sastrawi, NLTK
-- **Scraping**: BeautifulSoup
-- **Database**: SQLite
-- **Frontend**: HTML, CSS, Bootstrap, Chart.js
+- **Backend**: Flask 3.0.0 (Python 3.8+)
+- **Machine Learning**: scikit-learn 1.3+ (KNN, TF-IDF Vectorizer)
+- **Text Processing**: Sastrawi 1.2.0 (Stemming Nazief-Adriani), NLTK (Tokenization)
+- **File Processing**: PyPDF2 3.0.0 (PDF), python-docx 1.2.0 (DOCX)
+- **Web Scraping**: BeautifulSoup4, Requests
+- **Database**: SQLite dengan SQLAlchemy ORM
+- **Frontend**: HTML5, CSS3, Bootstrap 5, Chart.js, Font Awesome
 
 ## Instalasi
 
@@ -83,32 +86,166 @@ Aplikasi akan berjalan di `http://localhost:5000`
 ### 1. Scraping Data
 
 - Akses halaman `/scrape` untuk melakukan scraping data dari ejournal.unesa.ac.id
-- Data akan disimpan otomatis ke database tanpa label
-- Setelah scraping, akan diarahkan ke halaman Label Data Training
+- **Data otomatis dilabeli saat scraping** menggunakan keyword scoring (130+ keywords)
+- Label ditentukan berdasarkan:
+  - **TKJ Keywords** (60+): jaringan, komputer, router, cisco, mikrotik, server, hardware, dll (bobot 1-3)
+  - **RPL Keywords** (70+): aplikasi, software, web, android, sistem informasi, database, dll (bobot 1-3)
+- Confidence score dihitung dari rasio skor keyword terbesar vs total
+- Semua data hasil scraping tersimpan di **Data Latih** dengan label otomatis
 
-### 2. Labeling Data
+### 2. Mengelola Data Latih
 
-- Akses halaman `/label` untuk memberikan label pada data
-- **Opsi 1:** Label manual satu-per-satu (untuk data training berkualitas)
-- **Opsi 2:** Klik tombol **"Auto-Label Semua"** untuk otomatis label semua data (jika model sudah di-train)
+- Akses menu **Data → Data Latih** untuk melihat data training
+- Tampilan tabel dengan kolom: Judul, Penulis, Tahun, Abstrak, Label (RPL/TKJ)
+- Statistik: Total data, jumlah RPL, jumlah TKJ, distribusi persentase
+- Data latih digunakan untuk melatih model KNN
 - Minimal 10 data berlabel diperlukan untuk training
 
 ### 3. Training Model
 
 - Akses halaman `/train` untuk melatih model KNN
-- Model akan disimpan dan siap digunakan untuk klasifikasi
-- Setelah training, auto-label akan aktif di scraping
+- Proses training:
+  1. Preprocessing: Tokenizing → Stopword Removal → Stemming
+  2. TF-IDF Vectorization (max_features=1000, ngram_range=(1,2))
+  3. KNN Training (k=5, metric='cosine', weights='distance')
+- Model disimpan: `knn_classifier.joblib`, `tfidf_vectorizer.joblib`
+- Evaluasi otomatis dengan train-test split (80:20)
 
-### 4. Klasifikasi
+### 4. Klasifikasi Abstrak Baru
 
-- Halaman utama menampilkan hasil klasifikasi semua abstrak
-- Gunakan fitur upload untuk mengklasifikasi abstrak baru
-- Data dengan label akan muncul di visualisasi dan statistik
+**Opsi 1: Input Manual**
+- Akses halaman `/classify`
+- Copy-paste teks abstrak ke text area
+- Klik "Klasifikasi" untuk mendapat prediksi (RPL/TKJ) + confidence score
+- Hasil tersimpan di **Data Uji** dengan sumber "Manual Input"
 
-### 5. Evaluasi
+**Opsi 2: Upload File**
+- Mendukung 3 format: TXT, PDF, DOCX
+- **Smart extraction**: Hanya ekstrak bagian ABSTRAK (bukan seluruh dokumen)
+- PDF: Maksimal 15 halaman pertama, cari pattern "ABSTRAK"
+- DOCX: Baca paragraph-per-paragraph, berhenti setelah menemukan abstrak
+- Hasil tersimpan di **Data Uji** dengan sumber "File Upload"
 
-- Lihat hasil evaluasi model di halaman `/evaluation`
-- Grafik distribusi dan metrik performa ditampilkan
+### 5. Mengelola Data Uji
+
+- Akses menu **Data → Data Uji** untuk melihat history klasifikasi
+- Tampilan tabel dengan kolom: Teks Abstrak, Prediksi, Confidence, Sumber, Waktu
+- Statistik: Total, RPL, TKJ, Manual Input, File Upload
+- Fitur: Hapus data individual atau hapus semua data uji
+- Data uji terpisah dari data latih (model ClassificationHistory)
+
+### 6. Evaluasi Model
+
+- Akses halaman `/evaluation` untuk melihat performa model
+- Metrik: Accuracy, Precision, Recall, F1-Score (per kelas)
+- Confusion Matrix untuk analisis error
+- Grafik distribusi data training dan testing
+- Statistik: Jumlah sampel training, testing, waktu training
+
+## Dokumentasi Lengkap
+
+Project ini dilengkapi dengan dokumentasi teknis yang komprehensif:
+
+- **RUMUS_MATEMATIKA.md**: Penjelasan detail semua formula matematis (TF-IDF, Cosine Similarity, KNN) dengan notasi LaTeX
+- **RUMUS_SEDERHANA.md**: Penjelasan user-friendly dengan contoh kasus dan FAQ
+- **GUIDE.md**: Panduan lengkap arsitektur sistem dan pengembangan
+- **TFIDF_IMPLEMENTATION.md**: Detail implementasi TF-IDF sesuai paper penelitian
+
+## Database Schema
+
+### Model: Abstract (Data Latih)
+```python
+- id: Integer (Primary Key)
+- title: String(500)
+- author: String(200)
+- year: Integer
+- abstract_text: Text
+- url: String(500)
+- label: String(10)  # 'RPL' atau 'TKJ'
+- predicted_label: String(10)
+- confidence: Float
+- is_training_data: Boolean
+- created_at: DateTime
+- updated_at: DateTime
+```
+
+### Model: ClassificationHistory (Data Uji)
+```python
+- id: Integer (Primary Key)
+- abstract_text: Text
+- predicted_label: String(10)  # 'RPL' atau 'TKJ'
+- confidence: Float
+- source: String(20)  # 'manual' atau 'upload'
+- classified_at: DateTime
+```
+
+### Model: ModelMetrics
+```python
+- id: Integer (Primary Key)
+- accuracy: Float
+- precision_rpl: Float
+- precision_tkj: Float
+- recall_rpl: Float
+- recall_tkj: Float
+- f1_rpl: Float
+- f1_tkj: Float
+- confusion_matrix: Text (JSON)
+- training_samples: Integer
+- test_samples: Integer
+- trained_at: DateTime
+```
+
+## Struktur File Project
+
+```
+doc-classifier/
+├── app.py                          # Main Flask application
+├── models.py                       # Database models (SQLAlchemy)
+├── config.py                       # Configuration settings
+├── requirements.txt                # Python dependencies
+│
+├── auto_labeler.py                 # Auto-labeling dengan keyword scoring
+├── scraper.py                      # Web scraper untuk ejournal.unesa.ac.id
+├── preprocessing.py                # Text preprocessing (tokenize, stopword, stem)
+├── feature_extraction.py           # TF-IDF implementation
+├── classifier.py                   # KNN classifier
+├── utils.py                        # Helper functions
+│
+├── init_db.py                      # Database initialization
+├── scrape_now.py                   # Quick scraping script
+├── train_now.py                    # Quick training script
+├── auto_label_existing.py          # Batch auto-label existing data
+│
+├── test_*.py                       # Testing scripts
+├── run.sh / run.bat                # Run scripts
+│
+├── templates/                      # HTML templates (Jinja2)
+│   ├── base.html                   # Base template dengan navbar
+│   ├── index.html                  # Dashboard/Beranda
+│   ├── scrape.html                 # Scraping interface
+│   ├── label_data.html             # Data latih (training data)
+│   ├── test_data.html              # Data uji (classification history)
+│   ├── train.html                  # Training interface
+│   ├── classify.html               # Classification interface
+│   └── evaluation.html             # Evaluation metrics
+│
+├── models/                         # Trained model files (gitignored)
+│   ├── knn_classifier.joblib
+│   ├── tfidf_vectorizer.joblib
+│   └── model_metadata.joblib
+│
+├── instance/                       # Database files (gitignored)
+│   └── abstracts.db
+│
+├── uploads/                        # Uploaded files (gitignored)
+│
+└── Documentation files:
+    ├── README.md
+    ├── GUIDE.md
+    ├── RUMUS_MATEMATIKA.md
+    ├── RUMUS_SEDERHANA.md
+    └── TFIDF_IMPLEMENTATION.md
+```
 
 ## Referensi
 
@@ -126,15 +263,16 @@ START → Dokumen Testing → Pemberian Label → Text Mining → TF-IDF → Cos
 
 **Mapping ke Menu Website:**
 
-| Tahap                 | Menu Website     | File/Modul              | Keterangan                          |
-| --------------------- | ---------------- | ----------------------- | ----------------------------------- |
-| **Dokumen Testing**   | Menu Beranda     | `templates/index.html`  | Menampilkan semua dokumen/abstrak   |
-| **Pemberian Label**   | Menu Label Data  | `templates/label.html`  | User memberi label manual (RPL/TKJ) |
-| **Text Mining**       | Auto di Training | `preprocessing.py`      | Tokenizing → Filtering → Stemming   |
-| **TF-IDF**            | Auto di Training | `feature_extraction.py` | Konversi teks ke vektor numerik     |
-| **Cosine Similarity** | Auto di Training | `classifier.py`         | Ukur kemiripan antar dokumen        |
-| **KNN**               | Menu Training    | `templates/train.html`  | Simpan model KNN (k=5)              |
-| **Data Training**     | Menu Label Data  | Query database          | Data dengan label manual saja       |
+| Tahap                 | Menu Website      | File/Modul              | Keterangan                                   |
+| --------------------- | ----------------- | ----------------------- | -------------------------------------------- |
+| **Dokumen Testing**   | Menu Beranda      | `templates/index.html`  | Dashboard statistik data latih & uji         |
+| **Pemberian Label**   | Menu Scraping     | `auto_labeler.py`       | Auto-label dengan keyword scoring (130+ kw)  |
+| **Data Training**     | Menu Data Latih   | `templates/label_data.html` | Data hasil scraping dengan auto-label    |
+| **Text Mining**       | Auto di Training  | `preprocessing.py`      | Tokenizing → Stopword Removal → Stemming     |
+| **TF-IDF**            | Auto di Training  | `feature_extraction.py` | Raw count TF, IDF smoothing, L2 norm         |
+| **Cosine Similarity** | Auto di Training  | `classifier.py`         | Ukur kemiripan dengan cosine similarity      |
+| **KNN**               | Menu Training     | `templates/train.html`  | Train & simpan model (k=5, cosine, distance) |
+| **Data Testing**      | Menu Data Uji     | `templates/test_data.html` | History klasifikasi (manual + upload)     |
 
 ### 2. Alur Proses Text Mining (Preprocessing)
 
@@ -219,25 +357,102 @@ Terdapat kategori mayoritas dalam k-Nearest Neighbor?
 - `classifier.py` → Method `predict_single()`
 - Menggunakan `sklearn.neighbors.KNeighborsClassifier` dengan `metric='cosine'`
 
-## Metode KNN
+## Metode dan Algoritma
 
-1. **Text Preprocessing**: Tokenisasi, Stopword Removal, Stemming (Sastrawi)
-2. **Feature Extraction**: TF-IDF Weighting (max_features=1000)
-3. **Similarity Measure**: Cosine Similarity
-4. **Classification**: Voting berdasarkan k=5 tetangga terdekat
-5. **Evaluation**: Accuracy, Precision, Recall, F1-Score, Confusion Matrix
+### 1. Auto-Labeling (Keyword Scoring)
+- **TKJ Keywords** (60+ terms): jaringan, router, cisco, mikrotik, server, hardware, dll
+- **RPL Keywords** (70+ terms): aplikasi, web, android, sistem informasi, database, dll
+- **Weighted Scoring**: Setiap keyword memiliki bobot 1-3 berdasarkan spesifisitas
+- **Algorithm**: 
+  ```
+  TKJ_Score = Σ(weight × min(count, 3))
+  RPL_Score = Σ(weight × min(count, 3))
+  Label = argmax(TKJ_Score, RPL_Score)
+  Confidence = max_score / (TKJ_Score + RPL_Score)
+  ```
+
+### 2. Text Preprocessing (Sastrawi + NLTK)
+- **Tokenisasi**: Case folding, remove URL/email/numbers, split whitespace
+- **Stopword Removal**: ~750 stopwords Bahasa Indonesia (Sastrawi + custom)
+- **Stemming**: Algoritma Nazief-Adriani (Sastrawi Stemmer)
+- **Example**: "menggunakan" → "guna", "pembelajaran" → "ajar"
+
+### 3. Feature Extraction (TF-IDF)
+- **Formula**: TF(d,t) = f(d,t), IDF(t) = log((N+1)/(df+1)) + 1
+- **Parameters**: 
+  - `max_features=1000`: Ambil 1000 kata paling penting
+  - `ngram_range=(1,2)`: Unigram + bigram
+  - `min_df=2, max_df=0.8`: Filter kata terlalu jarang/umum
+  - `sublinear_tf=False`: Raw count (sesuai rumus)
+  - `use_idf=True, norm='l2'`: Normalisasi L2
+
+### 4. K-Nearest Neighbor (KNN)
+- **Parameters**: k=5, metric='cosine', weights='distance'
+- **Cosine Similarity**: sim(A,B) = (A·B) / (||A|| × ||B||)
+- **Classification**: Voting mayoritas dari 5 tetangga terdekat
+- **Confidence**: Persentase voting kelas mayoritas
+
+### 5. Evaluation Metrics
+- **Accuracy**: (TP + TN) / Total
+- **Precision**: TP / (TP + FP)
+- **Recall**: TP / (TP + FN)
+- **F1-Score**: 2 × (Precision × Recall) / (Precision + Recall)
+- **Confusion Matrix**: Visualisasi prediksi vs aktual
 
 ## Struktur Menu
 
-| Menu            | Route         | Fungsi                                   |
-| --------------- | ------------- | ---------------------------------------- |
-| **Beranda**     | `/`           | Tampilkan semua abstrak dengan statistik |
-| **Scraping**    | `/scrape`     | Scraping data dari ejournal.unesa.ac.id  |
-| **Label Data**  | `/label`      | Labeling manual abstrak (untuk training) |
-| **Training**    | `/train`      | Latih model KNN dengan data berlabel     |
-| **Klasifikasi** | `/classify`   | Klasifikasi abstrak baru real-time       |
-| **Evaluasi**    | `/evaluation` | Lihat metrik performa model              |
+| Menu            | Route         | Fungsi                                                     |
+| --------------- | ------------- | ---------------------------------------------------------- |
+| **Beranda**     | `/`           | Dashboard dengan statistik data latih dan data uji         |
+| **Scraping**    | `/scrape`     | Scraping data dari ejournal.unesa.ac.id + auto-labeling    |
+| **Data Latih**  | `/label`      | Lihat data training (hasil scraping dengan auto-label)     |
+| **Data Uji**    | `/data-test`  | Lihat history klasifikasi (manual input + file upload)     |
+| **Training**    | `/train`      | Latih model KNN dengan data latih (min. 10 data)           |
+| **Klasifikasi** | `/classify`   | Klasifikasi abstrak baru (input manual / upload file)      |
+| **Evaluasi**    | `/evaluation` | Lihat metrik performa: accuracy, precision, recall, F1     |
+
+## Tips Penggunaan
+
+### Untuk Hasil Klasifikasi Terbaik:
+
+1. **Training Data**: Minimal 50 data per kelas (RPL & TKJ) untuk model yang robust
+2. **Quality Data**: Pastikan data training memiliki abstrak yang jelas dan representatif
+3. **Upload File**: Gunakan file yang memiliki bagian "ABSTRAK" yang jelas (format Indonesia)
+4. **Retraining**: Lakukan training ulang setelah menambah data training baru
+
+### Troubleshooting:
+
+**Model belum di-train**
+- Solusi: Lakukan scraping → Training model minimal dengan 10 data
+
+**Ekstraksi abstrak gagal dari PDF/DOCX**
+- Pastikan dokumen memiliki header "ABSTRAK" atau "ABSTRACT"
+- Atau gunakan copy-paste manual ke input teks
+
+**Accuracy rendah**
+- Tambah lebih banyak data training (target: 100+ per kelas)
+- Periksa kualitas data: abstrak harus jelas dan berbeda antar kelas
+
+**Data uji tidak tersimpan**
+- Pastikan klasifikasi dilakukan setelah model di-train
+- Cek database: `ClassificationHistory` table
+
+## Kontribusi
+
+Silakan buka issue atau pull request untuk:
+- Bug fixes
+- Penambahan fitur baru
+- Improvement dokumentasi
+- Penambahan keyword untuk auto-labeling
 
 ## Lisensi
 
 MIT License
+
+## Pengembang
+
+Dikembangkan sebagai implementasi sistem klasifikasi dokumen menggunakan K-Nearest Neighbor dengan TF-IDF untuk klasifikasi abstrak tugas akhir mahasiswa PTI UNESA.
+
+---
+
+**Repository**: https://github.com/anang2804/Klasifikasi-Abstrak-Tugas-Akhir-Mahasiswa-PTI
