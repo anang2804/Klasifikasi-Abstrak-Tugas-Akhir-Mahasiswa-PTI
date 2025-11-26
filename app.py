@@ -223,6 +223,85 @@ def data_test():
                          stats=stats)
 
 
+@app.route('/data-test/save/<int:id>', methods=['POST'])
+def save_test_to_training(id):
+    """Simpan data uji ke Abstract sebagai data training"""
+    try:
+        test_data = ClassificationHistory.query.get_or_404(id)
+        
+        # Cek apakah text sudah ada di Abstract
+        existing = Abstract.query.filter_by(abstract_text=test_data.abstract_text).first()
+        if existing:
+            flash('Data ini sudah ada di database Abstract!', 'warning')
+            return redirect(url_for('data_test'))
+        
+        # Buat entry baru di Abstract dengan label dari prediksi
+        new_abstract = Abstract(
+            title=f'Input User - {test_data.classified_at.strftime("%d/%m/%Y %H:%M")}',
+            author='User Input',
+            year=test_data.classified_at.year,
+            abstract_text=test_data.abstract_text,
+            url='manual_input',
+            label=test_data.predicted_label,  # Gunakan prediksi sebagai label
+            source='user_classification'
+        )
+        db.session.add(new_abstract)
+        db.session.commit()
+        
+        flash(f'✅ Data berhasil disimpan ke Abstract dengan label {test_data.predicted_label}!', 'success')
+    except Exception as e:
+        flash(f'Error menyimpan data: {str(e)}', 'error')
+    
+    return redirect(url_for('data_test'))
+
+
+@app.route('/data-test/save-all', methods=['POST'])
+def save_all_test_to_training():
+    """Simpan semua data uji ke Abstract sebagai data training"""
+    try:
+        all_test_data = ClassificationHistory.query.all()
+        
+        if not all_test_data:
+            flash('Tidak ada data uji untuk disimpan!', 'warning')
+            return redirect(url_for('data_test'))
+        
+        saved_count = 0
+        skipped_count = 0
+        
+        for test_data in all_test_data:
+            # Cek apakah text sudah ada di Abstract
+            existing = Abstract.query.filter_by(abstract_text=test_data.abstract_text).first()
+            if existing:
+                skipped_count += 1
+                continue
+            
+            # Buat entry baru di Abstract dengan label dari prediksi
+            new_abstract = Abstract(
+                title=f'Input User - {test_data.classified_at.strftime("%d/%m/%Y %H:%M")}',
+                author='User Input',
+                year=test_data.classified_at.year,
+                abstract_text=test_data.abstract_text,
+                url='manual_input',
+                label=test_data.predicted_label,
+                source='user_classification'
+            )
+            db.session.add(new_abstract)
+            saved_count += 1
+        
+        db.session.commit()
+        
+        message = f'✅ Berhasil menyimpan {saved_count} data ke Abstract!'
+        if skipped_count > 0:
+            message += f' ({skipped_count} data dilewati karena sudah ada)'
+        
+        flash(message, 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error menyimpan data: {str(e)}', 'error')
+    
+    return redirect(url_for('data_test'))
+
+
 @app.route('/data-test/delete/<int:id>', methods=['POST'])
 def delete_test_data(id):
     """Hapus data uji berdasarkan ID"""

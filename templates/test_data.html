@@ -105,14 +105,24 @@ endblock %} {% block content %}
   >
     <h5 class="mb-0"><i class="bi bi-table"></i> Daftar Data Uji</h5>
     {% if stats.total > 0 %}
-    <button
-      type="button"
-      class="btn btn-danger btn-sm"
-      data-bs-toggle="modal"
-      data-bs-target="#clearAllModal"
-    >
-      <i class="bi bi-trash"></i> Hapus Semua
-    </button>
+    <div>
+      <button
+        type="button"
+        class="btn btn-success btn-sm me-2"
+        data-bs-toggle="modal"
+        data-bs-target="#saveAllModal"
+      >
+        <i class="bi bi-download"></i> Simpan Semua ke Data Training
+      </button>
+      <button
+        type="button"
+        class="btn btn-danger btn-sm"
+        data-bs-toggle="modal"
+        data-bs-target="#clearAllModal"
+      >
+        <i class="bi bi-trash"></i> Hapus Semua
+      </button>
+    </div>
     {% endif %}
   </div>
   <div class="card-body">
@@ -126,7 +136,7 @@ endblock %} {% block content %}
             <th width="12%">Confidence</th>
             <th width="10%">Sumber</th>
             <th width="15%">Waktu Klasifikasi</th>
-            <th width="8%">Aksi</th>
+            <th width="10%">Aksi</th>
           </tr>
         </thead>
         <tbody>
@@ -186,11 +196,21 @@ endblock %} {% block content %}
             <td>
               <form
                 method="POST"
+                action="{{ url_for('save_test_to_training', id=item.id) }}"
+                style="display: inline"
+                onsubmit="return confirm('Simpan data ini ke Data Training?');"
+              >
+                <button type="submit" class="btn btn-success btn-sm" title="Simpan ke Data Training">
+                  <i class="bi bi-download"></i>
+                </button>
+              </form>
+              <form
+                method="POST"
                 action="{{ url_for('delete_test_data', id=item.id) }}"
                 style="display: inline"
                 onsubmit="return confirm('Yakin ingin menghapus data ini?');"
               >
-                <button type="submit" class="btn btn-danger btn-sm">
+                <button type="submit" class="btn btn-danger btn-sm" title="Hapus">
                   <i class="bi bi-trash"></i>
                 </button>
               </form>
@@ -326,6 +346,65 @@ endblock %} {% block content %}
       <strong>Catatan:</strong> Data uji <strong>TIDAK</strong> digunakan untuk
       training model. Jika ingin menambah data training, gunakan menu
       <a href="{{ url_for('scrape') }}" class="alert-link">Scrape Data</a>.
+    </div>
+  </div>
+</div>
+
+<!-- Modal Konfirmasi Save All -->
+<div
+  class="modal fade"
+  id="saveAllModal"
+  tabindex="-1"
+  aria-labelledby="saveAllModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="saveAllModalLabel">
+          <i class="bi bi-download"></i> Konfirmasi Simpan Semua
+        </h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <p>
+          Anda yakin ingin menyimpan
+          <strong>SEMUA {{ stats.total }} data uji</strong> ke Data Training?
+        </p>
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle"></i>
+          Data akan disimpan ke tabel Abstract dengan:
+          <ul class="mb-0 mt-2">
+            <li>Title: "Input User - [Tanggal]"
+            <li>Author: "User Input"</li>
+            <li>Label: Sesuai prediksi model (RPL/TKJ)</li>
+            <li>Source: "user_classification"</li>
+          </ul>
+        </div>
+        <p class="text-success mb-0">
+          <i class="bi bi-check-circle"></i>
+          <strong>Manfaat:</strong> Data ini akan bisa digunakan untuk melatih model di training berikutnya!
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x"></i> Batal
+        </button>
+        <form
+          method="POST"
+          action="{{ url_for('save_all_test_to_training') }}"
+          style="display: inline"
+        >
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-download"></i> Ya, Simpan Semua
+          </button>
+        </form>
+      </div>
     </div>
   </div>
 </div>
