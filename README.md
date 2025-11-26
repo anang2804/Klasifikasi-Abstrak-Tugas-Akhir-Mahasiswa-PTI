@@ -10,7 +10,7 @@ Website ini mengklasifikasikan abstrak tugas akhir mahasiswa Program Studi PTI k
 ## Fitur Utama
 
 - ✅ Web scraping otomatis dari ejournal.unesa.ac.id (2020-2025)
-- ✅ **Auto-labeling dengan keyword scoring** (130+ keywords: 60 TKJ, 70 RPL dengan bobot 1-3)
+- ✅ **Auto-labeling dengan keyword scoring**
 - ✅ **Smart abstract extraction** - hanya ekstrak bagian abstrak dari PDF/DOCX (bukan seluruh dokumen)
 - ✅ **Tracking data uji terpisah** - ClassificationHistory untuk hasil klasifikasi
 - ✅ Preprocessing teks Bahasa Indonesia (tokenisasi, stopword removal, stemming Sastrawi)
