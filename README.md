@@ -114,12 +114,14 @@ Aplikasi akan berjalan di `http://localhost:5000`
 ### 4. Klasifikasi Abstrak Baru
 
 **Opsi 1: Input Manual**
+
 - Akses halaman `/classify`
 - Copy-paste teks abstrak ke text area
 - Klik "Klasifikasi" untuk mendapat prediksi (RPL/TKJ) + confidence score
 - Hasil tersimpan di **Data Uji** dengan sumber "Manual Input"
 
 **Opsi 2: Upload File**
+
 - Mendukung 3 format: TXT, PDF, DOCX
 - **Smart extraction**: Hanya ekstrak bagian ABSTRAK (bukan seluruh dokumen)
 - PDF: Maksimal 15 halaman pertama, cari pattern "ABSTRAK"
@@ -154,6 +156,7 @@ Project ini dilengkapi dengan dokumentasi teknis yang komprehensif:
 ## Database Schema
 
 ### Model: Abstract (Data Latih)
+
 ```python
 - id: Integer (Primary Key)
 - title: String(500)
@@ -170,6 +173,7 @@ Project ini dilengkapi dengan dokumentasi teknis yang komprehensif:
 ```
 
 ### Model: ClassificationHistory (Data Uji)
+
 ```python
 - id: Integer (Primary Key)
 - abstract_text: Text
@@ -180,6 +184,7 @@ Project ini dilengkapi dengan dokumentasi teknis yang komprehensif:
 ```
 
 ### Model: ModelMetrics
+
 ```python
 - id: Integer (Primary Key)
 - accuracy: Float
@@ -315,18 +320,18 @@ END (Model siap untuk klasifikasi)
 
 **Mapping ke Menu Website:**
 
-| Tahap                  | Menu Website      | File/Modul                  | Keterangan                                   |
-| ---------------------- | ----------------- | --------------------------- | -------------------------------------------- |
-| **Web Scraping**       | Menu Scraping     | `scraper.py`                | Scrape 100+ abstrak dari ejournal            |
-| **Auto-Labeling**      | Auto saat Scrape  | `auto_labeler.py`           | Keyword scoring → RPL/TKJ (confidence)       |
-| **Data Latih**         | Menu Data Latih   | `templates/label_data.html` | View 312 data dengan auto-label              |
-| **Training**           | Menu Training     | `templates/train.html`      | Trigger training pipeline                    |
-| **Text Preprocessing** | Auto di Training  | `preprocessing.py`          | Clean → Tokenize → Stopword → Stem           |
-| **TF-IDF**             | Auto di Training  | `feature_extraction.py`     | Vectorization (1000 features, L2 norm)       |
-| **KNN**                | Auto di Training  | `classifier.py`             | Train model (k=5, cosine similarity)         |
-| **Evaluation**         | Auto di Training  | `classifier.py` (evaluate)  | Hitung metrik → Simpan ke database           |
-| **View Metrics**       | Menu Evaluasi     | `templates/evaluation.html` | Tampilkan accuracy, precision, recall, F1    |
-| **Data Uji**           | Menu Data Uji     | `templates/test_data.html`  | History klasifikasi (manual + upload)        |
+| Tahap                  | Menu Website     | File/Modul                  | Keterangan                                |
+| ---------------------- | ---------------- | --------------------------- | ----------------------------------------- |
+| **Web Scraping**       | Menu Scraping    | `scraper.py`                | Scrape 100+ abstrak dari ejournal         |
+| **Auto-Labeling**      | Auto saat Scrape | `auto_labeler.py`           | Keyword scoring → RPL/TKJ (confidence)    |
+| **Data Latih**         | Menu Data Latih  | `templates/label_data.html` | View 312 data dengan auto-label           |
+| **Training**           | Menu Training    | `templates/train.html`      | Trigger training pipeline                 |
+| **Text Preprocessing** | Auto di Training | `preprocessing.py`          | Clean → Tokenize → Stopword → Stem        |
+| **TF-IDF**             | Auto di Training | `feature_extraction.py`     | Vectorization (1000 features, L2 norm)    |
+| **KNN**                | Auto di Training | `classifier.py`             | Train model (k=5, cosine similarity)      |
+| **Evaluation**         | Auto di Training | `classifier.py` (evaluate)  | Hitung metrik → Simpan ke database        |
+| **View Metrics**       | Menu Evaluasi    | `templates/evaluation.html` | Tampilkan accuracy, precision, recall, F1 |
+| **Data Uji**           | Menu Data Uji    | `templates/test_data.html`  | History klasifikasi (manual + upload)     |
 
 ### 2. Alur Proses Text Mining (Preprocessing)
 
@@ -429,7 +434,7 @@ START (Abstrak baru dari user)
                                 │  9b. AMBIL DARI DOKUMEN  │
                                 │      SIMILARITY TERTINGGI│
                                 └──────────────────────────┘
-                                Contoh: [RPL:0.85, RPL:0.82, 
+                                Contoh: [RPL:0.85, RPL:0.82,
                                          TKJ:0.78, TKJ:0.77]
                                 → Label: RPL (similarity 0.85)
                                 → Confidence: 2/4 = 50%
@@ -451,23 +456,24 @@ END (Hasil klasifikasi ditampilkan)
 
 **File Implementasi:**
 
-| Komponen              | File/Function                  | Output                          |
-| --------------------- | ------------------------------ | ------------------------------- |
-| Input Interface       | `templates/classify.html`      | Form input + upload             |
-| Smart Extraction      | `app.py: extract_abstract_section()` | Teks abstrak saja        |
-| Preprocessing         | `preprocessing.py: preprocess_text()` | Token yang di-stem      |
-| TF-IDF Transform      | `feature_extraction.py: transform()` | Vektor 1000 features     |
-| KNN Prediction        | `classifier.py: predict_single()` | Label + confidence          |
-| Save to DB            | `app.py: /classify route`      | Insert ClassificationHistory    |
-| Display Result        | `templates/classify.html`      | Prediksi + keyword + highlight  |
+| Komponen         | File/Function                         | Output                         |
+| ---------------- | ------------------------------------- | ------------------------------ |
+| Input Interface  | `templates/classify.html`             | Form input + upload            |
+| Smart Extraction | `app.py: extract_abstract_section()`  | Teks abstrak saja              |
+| Preprocessing    | `preprocessing.py: preprocess_text()` | Token yang di-stem             |
+| TF-IDF Transform | `feature_extraction.py: transform()`  | Vektor 1000 features           |
+| KNN Prediction   | `classifier.py: predict_single()`     | Label + confidence             |
+| Save to DB       | `app.py: /classify route`             | Insert ClassificationHistory   |
+| Display Result   | `templates/classify.html`             | Prediksi + keyword + highlight |
 
 ## Metode dan Algoritma
 
 ### 1. Auto-Labeling (Keyword Scoring)
+
 - **TKJ Keywords** (60+ terms): jaringan, router, cisco, mikrotik, server, hardware, dll
 - **RPL Keywords** (70+ terms): aplikasi, web, android, sistem informasi, database, dll
 - **Weighted Scoring**: Setiap keyword memiliki bobot 1-3 berdasarkan spesifisitas
-- **Algorithm**: 
+- **Algorithm**:
   ```
   TKJ_Score = Σ(weight × min(count, 3))
   RPL_Score = Σ(weight × min(count, 3))
@@ -476,14 +482,16 @@ END (Hasil klasifikasi ditampilkan)
   ```
 
 ### 2. Text Preprocessing (Sastrawi + NLTK)
+
 - **Tokenisasi**: Case folding, remove URL/email/numbers, split whitespace
 - **Stopword Removal**: ~750 stopwords Bahasa Indonesia (Sastrawi + custom)
 - **Stemming**: Algoritma Nazief-Adriani (Sastrawi Stemmer)
 - **Example**: "menggunakan" → "guna", "pembelajaran" → "ajar"
 
 ### 3. Feature Extraction (TF-IDF)
+
 - **Formula**: TF(d,t) = f(d,t), IDF(t) = log((N+1)/(df+1)) + 1
-- **Parameters**: 
+- **Parameters**:
   - `max_features=1000`: Ambil 1000 kata paling penting
   - `ngram_range=(1,2)`: Unigram + bigram
   - `min_df=2, max_df=0.8`: Filter kata terlalu jarang/umum
@@ -491,12 +499,14 @@ END (Hasil klasifikasi ditampilkan)
   - `use_idf=True, norm='l2'`: Normalisasi L2
 
 ### 4. K-Nearest Neighbor (KNN)
+
 - **Parameters**: k=5, metric='cosine', weights='distance'
 - **Cosine Similarity**: sim(A,B) = (A·B) / (||A|| × ||B||)
 - **Classification**: Voting mayoritas dari 5 tetangga terdekat
 - **Confidence**: Persentase voting kelas mayoritas
 
 ### 5. Evaluation Metrics
+
 - **Accuracy**: (TP + TN) / Total
 - **Precision**: TP / (TP + FP)
 - **Recall**: TP / (TP + FN)
@@ -527,7 +537,7 @@ START (Setelah Training Model)
 ┌──────────────────────────┐
 │  3. CONFUSION MATRIX     │
 └──────────────────────────┘
-  
+
                     Predicted
                  RPL      TKJ
          ┌─────────────────────┐
@@ -535,14 +545,14 @@ START (Setelah Training Model)
 Actual   ├─────────────────────┤
      TKJ │  FP_rpl  │  TP_tkj  │  → False Positive RPL, True Positive TKJ
          └─────────────────────┘
-  
+
   Contoh Real:
                  RPL    TKJ
           ┌──────────────────┐
       RPL │  45    │   3     │  → 45 benar RPL, 3 salah prediksi TKJ
       TKJ │   2    │  13     │  → 2 salah prediksi RPL, 13 benar TKJ
           └──────────────────┘
-  
+
   ↓
 ┌──────────────────────────────────────────────────────────────────┐
 │  4. HITUNG METRIK EVALUASI                                       │
@@ -552,12 +562,14 @@ Actual   ├─────────────────────┤
 #### 4a. ACCURACY (Akurasi Keseluruhan)
 
 **Formula:**
+
 ```
 Accuracy = (TP_rpl + TP_tkj) / Total_Prediksi
          = (Jumlah Prediksi Benar) / (Total Semua Prediksi)
 ```
 
 **Contoh Perhitungan:**
+
 ```
 TP_rpl = 45   (Prediksi RPL, Actual RPL - BENAR)
 TP_tkj = 13   (Prediksi TKJ, Actual TKJ - BENAR)
@@ -570,6 +582,7 @@ Accuracy = (45 + 13) / (45 + 13 + 2 + 3)
 ```
 
 **Interpretasi:**
+
 - Model benar mengklasifikasi **92.06%** dari semua data test
 - Semakin tinggi accuracy, semakin baik model secara keseluruhan
 - Cocok digunakan ketika dataset **seimbang** (jumlah RPL ≈ TKJ)
@@ -579,6 +592,7 @@ Accuracy = (45 + 13) / (45 + 13 + 2 + 3)
 #### 4b. PRECISION (Presisi per Kelas)
 
 **Formula:**
+
 ```
 Precision_RPL = TP_rpl / (TP_rpl + FP_rpl)
               = (Prediksi RPL yang Benar) / (Semua yang Diprediksi RPL)
@@ -588,17 +602,19 @@ Precision_TKJ = TP_tkj / (TP_tkj + FP_tkj)
 ```
 
 **Contoh Perhitungan:**
+
 ```
-Precision_RPL = 45 / (45 + 2) 
-              = 45 / 47 
+Precision_RPL = 45 / (45 + 2)
+              = 45 / 47
               = 0.9574 = 95.74%
 
-Precision_TKJ = 13 / (13 + 3) 
-              = 13 / 16 
+Precision_TKJ = 13 / (13 + 3)
+              = 13 / 16
               = 0.8125 = 81.25%
 ```
 
 **Interpretasi:**
+
 - Dari semua yang diprediksi **RPL**, **95.74%** benar-benar RPL
 - Dari semua yang diprediksi **TKJ**, **81.25%** benar-benar TKJ
 - **Precision tinggi** = sedikit **False Positive** (salah prediksi positif)
@@ -609,6 +625,7 @@ Precision_TKJ = 13 / (13 + 3)
 #### 4c. RECALL (Sensitivitas/Daya Ingat per Kelas)
 
 **Formula:**
+
 ```
 Recall_RPL = TP_rpl / (TP_rpl + FN_rpl)
            = (Prediksi RPL yang Benar) / (Semua yang Seharusnya RPL)
@@ -618,17 +635,19 @@ Recall_TKJ = TP_tkj / (TP_tkj + FN_tkj)
 ```
 
 **Contoh Perhitungan:**
+
 ```
-Recall_RPL = 45 / (45 + 3) 
-           = 45 / 48 
+Recall_RPL = 45 / (45 + 3)
+           = 45 / 48
            = 0.9375 = 93.75%
 
-Recall_TKJ = 13 / (13 + 2) 
-           = 13 / 15 
+Recall_TKJ = 13 / (13 + 2)
+           = 13 / 15
            = 0.8667 = 86.67%
 ```
 
 **Interpretasi:**
+
 - Dari semua abstrak **RPL asli**, **93.75%** berhasil terdeteksi sebagai RPL
 - Dari semua abstrak **TKJ asli**, **86.67%** berhasil terdeteksi sebagai TKJ
 - **Recall tinggi** = sedikit **False Negative** (data tidak terdeteksi)
@@ -639,6 +658,7 @@ Recall_TKJ = 13 / (13 + 2)
 #### 4d. F1-SCORE (Harmonic Mean dari Precision & Recall)
 
 **Formula:**
+
 ```
 F1_RPL = 2 × (Precision_RPL × Recall_RPL) / (Precision_RPL + Recall_RPL)
 
@@ -646,6 +666,7 @@ F1_TKJ = 2 × (Precision_TKJ × Recall_TKJ) / (Precision_TKJ + Recall_TKJ)
 ```
 
 **Contoh Perhitungan:**
+
 ```
 F1_RPL = 2 × (0.9574 × 0.9375) / (0.9574 + 0.9375)
        = 2 × 0.8976 / 1.8949
@@ -657,6 +678,7 @@ F1_TKJ = 2 × (0.8125 × 0.8667) / (0.8125 + 0.8667)
 ```
 
 **Interpretasi:**
+
 - F1-Score adalah **rata-rata harmonis** dari Precision dan Recall
 - Nilai tinggi (mendekati 100%) = model **balance** antara precision & recall
 - **F1_RPL 94.74%** = model sangat baik untuk kelas RPL
@@ -669,7 +691,7 @@ F1_TKJ = 2 × (0.8125 × 0.8667) / (0.8125 + 0.8667)
   ↓
 ┌──────────────────────────┐
 │  5. SIMPAN METRICS       │ → Model: ModelMetrics
-│  (ke database)           │ → Fields: accuracy, precision_rpl, 
+│  (ke database)           │ → Fields: accuracy, precision_rpl,
 └──────────────────────────┘   precision_tkj, recall_rpl, recall_tkj,
   ↓                             f1_rpl, f1_tkj, confusion_matrix,
 ┌──────────────────────────┐   training_samples, test_samples, trained_at
@@ -684,46 +706,44 @@ END                             → Statistik Training/Testing Samples
 
 ### Rangkuman Metrik Evaluasi
 
-| Metrik      | Formula                          | Interpretasi                              | Range  | Kapan Digunakan |
-| ----------- | -------------------------------- | ----------------------------------------- | ------ | --------------- |
-| **Accuracy**| (TP+TN) / Total                  | Akurasi keseluruhan model                 | 0-100% | Dataset seimbang |
-| **Precision**| TP / (TP + FP)                  | Ketepatan prediksi positif                | 0-100% | False Positive berbahaya |
-| **Recall**  | TP / (TP + FN)                   | Kemampuan mendeteksi kelas positif        | 0-100% | False Negative berbahaya |
-| **F1-Score**| 2×(P×R) / (P+R)                  | Keseimbangan Precision & Recall           | 0-100% | Balance P & R (umum) |
+| Metrik        | Formula         | Interpretasi                       | Range  | Kapan Digunakan          |
+| ------------- | --------------- | ---------------------------------- | ------ | ------------------------ |
+| **Accuracy**  | (TP+TN) / Total | Akurasi keseluruhan model          | 0-100% | Dataset seimbang         |
+| **Precision** | TP / (TP + FP)  | Ketepatan prediksi positif         | 0-100% | False Positive berbahaya |
+| **Recall**    | TP / (TP + FN)  | Kemampuan mendeteksi kelas positif | 0-100% | False Negative berbahaya |
+| **F1-Score**  | 2×(P×R) / (P+R) | Keseimbangan Precision & Recall    | 0-100% | Balance P & R (umum)     |
 
 **Contoh Kasus Penggunaan:**
 
 1. **Spam Email Detection** → Gunakan **Precision**
    - False Positive (email penting masuk spam) lebih berbahaya
-   
 2. **Cancer Detection** → Gunakan **Recall**
    - False Negative (kanker tidak terdeteksi) lebih berbahaya
-   
 3. **Document Classification (Kasus Kita)** → Gunakan **F1-Score**
    - Butuh keseimbangan: tidak boleh terlalu banyak salah klasifikasi (FP maupun FN)
 
 **File Implementasi:**
 
-| Komponen           | File/Function                    | Output                     |
-| ------------------ | -------------------------------- | -------------------------- |
-| Train-Test Split   | `classifier.py: train()`         | X_train, X_test, y_train, y_test |
-| Model Prediction   | `classifier.py: evaluate()`      | y_pred array               |
-| Confusion Matrix   | `sklearn.metrics.confusion_matrix` | 2×2 matrix                |
-| Metrik Calculation | `sklearn.metrics.classification_report` | Dict metrics      |
-| Save to DB         | `app.py: /train route`           | Insert ModelMetrics        |
-| Visualization      | `templates/evaluation.html`      | Charts + Tables + Heatmap  |
+| Komponen           | File/Function                           | Output                           |
+| ------------------ | --------------------------------------- | -------------------------------- |
+| Train-Test Split   | `classifier.py: train()`                | X_train, X_test, y_train, y_test |
+| Model Prediction   | `classifier.py: evaluate()`             | y_pred array                     |
+| Confusion Matrix   | `sklearn.metrics.confusion_matrix`      | 2×2 matrix                       |
+| Metrik Calculation | `sklearn.metrics.classification_report` | Dict metrics                     |
+| Save to DB         | `app.py: /train route`                  | Insert ModelMetrics              |
+| Visualization      | `templates/evaluation.html`             | Charts + Tables + Heatmap        |
 
 ## Struktur Menu
 
-| Menu            | Route         | Fungsi                                                     |
-| --------------- | ------------- | ---------------------------------------------------------- |
-| **Beranda**     | `/`           | Dashboard dengan statistik data latih dan data uji         |
-| **Scraping**    | `/scrape`     | Scraping data dari ejournal.unesa.ac.id + auto-labeling    |
-| **Data Latih**  | `/label`      | Lihat data training (hasil scraping dengan auto-label)     |
-| **Data Uji**    | `/data-test`  | Lihat history klasifikasi (manual input + file upload)     |
-| **Training**    | `/train`      | Latih model KNN dengan data latih (min. 10 data)           |
-| **Klasifikasi** | `/classify`   | Klasifikasi abstrak baru (input manual / upload file)      |
-| **Evaluasi**    | `/evaluation` | Lihat metrik performa: accuracy, precision, recall, F1     |
+| Menu            | Route         | Fungsi                                                  |
+| --------------- | ------------- | ------------------------------------------------------- |
+| **Beranda**     | `/`           | Dashboard dengan statistik data latih dan data uji      |
+| **Scraping**    | `/scrape`     | Scraping data dari ejournal.unesa.ac.id + auto-labeling |
+| **Data Latih**  | `/label`      | Lihat data training (hasil scraping dengan auto-label)  |
+| **Data Uji**    | `/data-test`  | Lihat history klasifikasi (manual input + file upload)  |
+| **Training**    | `/train`      | Latih model KNN dengan data latih (min. 10 data)        |
+| **Klasifikasi** | `/classify`   | Klasifikasi abstrak baru (input manual / upload file)   |
+| **Evaluasi**    | `/evaluation` | Lihat metrik performa: accuracy, precision, recall, F1  |
 
 ## Tips Penggunaan
 
@@ -737,23 +757,28 @@ END                             → Statistik Training/Testing Samples
 ### Troubleshooting:
 
 **Model belum di-train**
+
 - Solusi: Lakukan scraping → Training model minimal dengan 10 data
 
 **Ekstraksi abstrak gagal dari PDF/DOCX**
+
 - Pastikan dokumen memiliki header "ABSTRAK" atau "ABSTRACT"
 - Atau gunakan copy-paste manual ke input teks
 
 **Accuracy rendah**
+
 - Tambah lebih banyak data training (target: 100+ per kelas)
 - Periksa kualitas data: abstrak harus jelas dan berbeda antar kelas
 
 **Data uji tidak tersimpan**
+
 - Pastikan klasifikasi dilakukan setelah model di-train
 - Cek database: `ClassificationHistory` table
 
 ## Kontribusi
 
 Silakan buka issue atau pull request untuk:
+
 - Bug fixes
 - Penambahan fitur baru
 - Improvement dokumentasi
