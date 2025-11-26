@@ -35,12 +35,31 @@ def train_model():
         texts = [d.abstract_text for d in labeled_data]
         labels = [d.label for d in labeled_data]
         
+        # Tanyakan K value ke user
+        print(f"\n🔧 KONFIGURASI TRAINING:")
+        print(f"   Saran nilai K:")
+        print(f"   - K=3: Untuk data sedikit (sensitif)")
+        print(f"   - K=5: Balanced (default) ✓")
+        print(f"   - K=7: Lebih stabil")
+        print(f"   - K=9+: Dataset besar (>1000 data)")
+        
+        k_input = input(f"\n   Masukkan nilai K [default=5]: ").strip()
+        k_value = int(k_input) if k_input and k_input.isdigit() else 5
+        
+        # Validasi K
+        if k_value < 1:
+            print(f"   ⚠️  K minimal 1, menggunakan K=5")
+            k_value = 5
+        elif k_value > len(labeled_data):
+            print(f"   ⚠️  K tidak boleh > jumlah data, menggunakan K=5")
+            k_value = 5
+        
         print(f"\n🔧 MEMULAI TRAINING...")
-        print(f"   K Value: 5")
+        print(f"   K Value: {k_value}")
         print(f"   Test Size: 20%")
         
         # Initialize classifier
-        classifier = KNNClassifier(k=5)
+        classifier = KNNClassifier(k=k_value)
         
         # Prepare data (preprocessing + split)
         print(f"\n   → Preprocessing texts...")

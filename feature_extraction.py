@@ -263,3 +263,28 @@ def create_tfidf_features(texts: List[str],
     tfidf_matrix = extractor.fit_transform(texts)
     
     return tfidf_matrix, extractor
+
+
+if __name__ == "__main__":
+    texts = [
+        "dokumen pertama tentang data",
+        "dokumen kedua membahas data dan analisis",
+        "dokumen ketiga mengenai machine learning",
+        "dokumen keempat membahas analisis data"
+    ]
+    tfidf_matrix, extractor = create_tfidf_features(texts)
+    doc_names = [f"Doc_{i+1}" for i in range(len(texts))]
+    similarity_df = SimilarityCalculator.get_similarity_dataframe(tfidf_matrix, doc_names)
+    print("Similarity Table:")
+    print(similarity_df)
+
+    # Deteksi jika dijalankan di Streamlit
+    try:
+        import streamlit as st
+        st.title("Similarity Table")
+        st.dataframe(similarity_df)
+    except ImportError:
+        pass  # Streamlit tidak terpasang, hanya print ke terminal
+
+    # Untuk Jupyter Notebook, cukup jalankan:
+    # similarity_df

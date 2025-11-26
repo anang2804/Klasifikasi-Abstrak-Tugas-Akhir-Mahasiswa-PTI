@@ -1,6 +1,5 @@
-{% extends "base.html" %}
-{% block title %}Riwayat Klasifikasi - Klasifikasi Abstrak PTI{% endblock %}
-{% block content %}
+{% extends "base.html" %} {% block title %}Riwayat Klasifikasi - Klasifikasi
+Abstrak PTI{% endblock %} {% block content %}
 <div class="row mb-4">
   <div class="col-12">
     <div class="card bg-info text-white">
@@ -200,7 +199,11 @@
                 style="display: inline"
                 onsubmit="return confirm('Simpan data ini ke Data Training?');"
               >
-                <button type="submit" class="btn btn-success btn-sm" title="Simpan ke Data Training">
+                <button
+                  type="submit"
+                  class="btn btn-success btn-sm"
+                  title="Simpan ke Data Training"
+                >
                   <i class="bi bi-download"></i>
                 </button>
               </form>
@@ -210,7 +213,11 @@
                 style="display: inline"
                 onsubmit="return confirm('Yakin ingin menghapus data ini?');"
               >
-                <button type="submit" class="btn btn-danger btn-sm" title="Hapus">
+                <button
+                  type="submit"
+                  class="btn btn-danger btn-sm"
+                  title="Hapus"
+                >
                   <i class="bi bi-trash"></i>
                 </button>
               </form>
@@ -239,8 +246,7 @@
 
         <!-- Page numbers -->
         {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1,
-        left_current=2, right_current=2) %}
-          {% if page_num %}
+        left_current=2, right_current=2) %} {% if page_num %}
         <li
           class="page-item {% if page_num == pagination.page %}active{% endif %}"
         >
@@ -248,12 +254,11 @@
             >{{ page_num }}</a
           >
         </li>
-          {% else %}
+        {% else %}
         <li class="page-item disabled">
           <span class="page-link">...</span>
         </li>
-          {% endif %}
-        {% endfor %}
+        {% endif %} {% endfor %}
 
         <!-- Next -->
         <li
@@ -291,16 +296,16 @@
   <div class="card-body">
     <h6>Apa itu Riwayat Klasifikasi?</h6>
     <p>
-      Halaman ini menampilkan <strong>riwayat hasil klasifikasi</strong> yang dilakukan oleh user melalui
-      <strong>Menu Klasifikasi</strong>. Data ini berasal dari:
+      Halaman ini menampilkan <strong>riwayat hasil klasifikasi</strong> yang
+      dilakukan oleh user melalui <strong>Menu Klasifikasi</strong>. Data ini
+      berasal dari:
     </p>
     <ul>
       <li>
-        <strong>Input Manual</strong> - Teks abstrak yang di-copy-paste ke form input
+        <strong>Input Manual</strong> - Teks abstrak yang di-copy-paste ke form
+        input
       </li>
-      <li>
-        <strong>Upload File</strong> - File TXT/PDF/DOCX yang di-upload
-      </li>
+      <li><strong>Upload File</strong> - File TXT/PDF/DOCX yang di-upload</li>
     </ul>
 
     <h6 class="mt-3">Fungsi Halaman Ini:</h6>
@@ -335,8 +340,10 @@
 
     <div class="alert alert-info mt-3 mb-0">
       <i class="bi bi-lightbulb"></i>
-      <strong>Tips:</strong> Gunakan tombol <span class="badge bg-success"><i class="bi bi-download"></i></span> untuk menyimpan
-      data yang prediksinya sudah benar ke database training, sehingga bisa digunakan untuk melatih model di masa depan.
+      <strong>Tips:</strong> Gunakan tombol
+      <span class="badge bg-success"><i class="bi bi-download"></i></span> untuk
+      menyimpan data yang prediksinya sudah benar ke database training, sehingga
+      bisa digunakan untuk melatih model di masa depan.
     </div>
   </div>
 </div>
@@ -371,7 +378,7 @@
           <i class="bi bi-info-circle"></i>
           Data akan disimpan ke tabel Abstract dengan:
           <ul class="mb-0 mt-2">
-            <li>Title: "Input User - [Tanggal]"
+            <li>Title: "Input User - [Tanggal]"</li>
             <li>Author: "User Input"</li>
             <li>Label: Sesuai prediksi model (RPL/TKJ)</li>
             <li>Source: "user_classification"</li>
@@ -379,7 +386,8 @@
         </div>
         <p class="text-success mb-0">
           <i class="bi bi-check-circle"></i>
-          <strong>Manfaat:</strong> Data ini akan bisa digunakan untuk melatih model di training berikutnya!
+          <strong>Manfaat:</strong> Data ini akan bisa digunakan untuk melatih
+          model di training berikutnya!
         </p>
       </div>
       <div class="modal-footer">
