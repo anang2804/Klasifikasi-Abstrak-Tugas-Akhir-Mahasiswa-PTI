@@ -1,15 +1,13 @@
-{% extends "base.html" %} {% block title %}Data Latih - Klasifikasi Abstrak
+{% extends "base.html" %} {% block title %}Data Training - Klasifikasi Abstrak
 PTI{% endblock %} {% block content %}
 <div class="row mb-4">
   <div class="col-12">
     <div class="card bg-success text-white">
       <div class="card-body">
-        <h2 class="mb-2">
-          <i class="bi bi-database"></i> Data Latih (Training Data)
-        </h2>
+        <h2 class="mb-2"><i class="bi bi-database"></i> Data Training</h2>
         <p class="mb-0">
           Data abstrak hasil scraping yang sudah dilabel otomatis menggunakan
-          keyword scoring
+          keyword scoring (digunakan untuk melatih model)
         </p>
       </div>
     </div>
@@ -22,7 +20,7 @@ PTI{% endblock %} {% block content %}
     <div class="card bg-primary text-white">
       <div class="card-body">
         <h5 class="card-title">
-          <i class="bi bi-collection"></i> Total Data Latih
+          <i class="bi bi-collection"></i> Total Data Training
         </h5>
         <h2 class="mb-0">{{ stats.total }}</h2>
       </div>

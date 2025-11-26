@@ -1,11 +1,11 @@
-{% extends "base.html" %} {% block title %}Data Uji - Klasifikasi Abstrak PTI{%
+{% extends "base.html" %} {% block title %}Riwayat Klasifikasi - Klasifikasi Abstrak PTI{%
 endblock %} {% block content %}
 <div class="row mb-4">
   <div class="col-12">
     <div class="card bg-info text-white">
       <div class="card-body">
         <h2 class="mb-2">
-          <i class="bi bi-clipboard-data"></i> Data Uji (Test Data)
+          <i class="bi bi-clipboard-data"></i> Riwayat Klasifikasi User
         </h2>
         <p class="mb-0">
           Data hasil klasifikasi dari menu Klasifikasi (input manual & upload
@@ -22,7 +22,7 @@ endblock %} {% block content %}
     <div class="card bg-primary text-white">
       <div class="card-body">
         <h5 class="card-title">
-          <i class="bi bi-collection"></i> Total Data Uji
+          <i class="bi bi-collection"></i> Total Klasifikasi
         </h5>
         <h2 class="mb-0">{{ stats.total }}</h2>
       </div>
@@ -91,11 +91,11 @@ endblock %} {% block content %}
 {% if stats.total == 0 %}
 <div class="alert alert-info">
   <i class="bi bi-info-circle"></i>
-  <strong>Belum ada data uji.</strong>
-  Data uji akan muncul setelah Anda melakukan klasifikasi di
+  <strong>Belum ada riwayat klasifikasi.</strong>
+  Riwayat akan muncul setelah Anda melakukan klasifikasi di
   <a href="{{ url_for('classify') }}" class="alert-link">Menu Klasifikasi</a>.
 </div>
-{% endif %}
+{% endif %>
 
 <!-- Test Data Table -->
 {% if test_data %}
@@ -103,7 +103,7 @@ endblock %} {% block content %}
   <div
     class="card-header bg-white d-flex justify-content-between align-items-center"
   >
-    <h5 class="mb-0"><i class="bi bi-table"></i> Daftar Data Uji</h5>
+    <h5 class="mb-0"><i class="bi bi-table"></i> Daftar Riwayat Klasifikasi</h5>
     {% if stats.total > 0 %}
     <div>
       <button
@@ -239,7 +239,8 @@ endblock %} {% block content %}
 
         <!-- Page numbers -->
         {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1,
-        left_current=2, right_current=2) %} {% if page_num %}
+        left_current=2, right_current=2) %}
+          {% if page_num %}
         <li
           class="page-item {% if page_num == pagination.page %}active{% endif %}"
         >
@@ -247,11 +248,12 @@ endblock %} {% block content %}
             >{{ page_num }}</a
           >
         </li>
-        {% else %}
+          {% else %}
         <li class="page-item disabled">
           <span class="page-link">...</span>
         </li>
-        {% endif %} {% endfor %}
+          {% endif %}
+        {% endfor %}
 
         <!-- Next -->
         <li
@@ -274,7 +276,7 @@ endblock %} {% block content %}
         Menampilkan {{ (pagination.page - 1) * pagination.per_page + 1 }} - {%
         if pagination.page * pagination.per_page < pagination.total %} {{
         pagination.page * pagination.per_page }} {% else %} {{ pagination.total
-        }} {% endif %} dari {{ pagination.total }} data uji
+        }} {% endif %} dari {{ pagination.total }} riwayat klasifikasi
       </small>
     </div>
   </div>
@@ -284,68 +286,57 @@ endblock %} {% block content %}
 <!-- Info Card -->
 <div class="card mt-4 border-info">
   <div class="card-header bg-info text-white">
-    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Tentang Data Uji</h5>
+    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Tentang Halaman Ini</h5>
   </div>
   <div class="card-body">
-    <h6>Apa itu Data Uji?</h6>
+    <h6>Apa itu Riwayat Klasifikasi?</h6>
     <p>
-      Data uji adalah data abstrak yang sudah diklasifikasi oleh model KNN
-      melalui
-      <strong>Menu Klasifikasi</strong>. Data ini digunakan untuk:
+      Halaman ini menampilkan <strong>riwayat hasil klasifikasi</strong> yang dilakukan oleh user melalui
+      <strong>Menu Klasifikasi</strong>. Data ini berasal dari:
     </p>
     <ul>
       <li>
-        <strong>Evaluasi kinerja model</strong> - Melihat bagaimana model
-        bekerja pada data baru
+        <strong>Input Manual</strong> - Teks abstrak yang di-copy-paste ke form input
       </li>
       <li>
-        <strong>Tracking prediksi</strong> - Menyimpan history klasifikasi
-      </li>
-      <li>
-        <strong>Analisis distribusi</strong> - Melihat pola klasifikasi RPL vs
-        TKJ
+        <strong>Upload File</strong> - File TXT/PDF/DOCX yang di-upload
       </li>
     </ul>
 
-    <h6 class="mt-3">Perbedaan dengan Data Latih:</h6>
+    <h6 class="mt-3">Fungsi Halaman Ini:</h6>
     <div class="row">
       <div class="col-md-6">
-        <div class="card bg-success bg-opacity-10">
+        <div class="card bg-primary bg-opacity-10">
           <div class="card-body">
-            <h6 class="text-success">
-              <i class="bi bi-database"></i> Data Latih (Training Data)
+            <h6 class="text-primary">
+              <i class="bi bi-clock-history"></i> Tracking Klasifikasi
             </h6>
-            <ul class="small mb-0">
-              <li>Dari scraping ejournal.unesa.ac.id</li>
-              <li>Label otomatis dengan keyword scoring</li>
-              <li>Digunakan untuk <strong>melatih model</strong></li>
-              <li>Total: <strong>312 data</strong> (242 RPL, 70 TKJ)</li>
-            </ul>
+            <p class="small mb-0">
+              Menyimpan history semua klasifikasi yang pernah dilakukan user,
+              lengkap dengan prediksi, confidence, dan waktu klasifikasi.
+            </p>
           </div>
         </div>
       </div>
       <div class="col-md-6">
-        <div class="card bg-info bg-opacity-10">
+        <div class="card bg-success bg-opacity-10">
           <div class="card-body">
-            <h6 class="text-info">
-              <i class="bi bi-clipboard-data"></i> Data Uji (Test Data)
+            <h6 class="text-success">
+              <i class="bi bi-download"></i> Simpan ke Dataset
             </h6>
-            <ul class="small mb-0">
-              <li>Dari input manual & upload file</li>
-              <li>Label prediksi dari model KNN</li>
-              <li>Digunakan untuk <strong>evaluasi & tracking</strong></li>
-              <li>Total: <strong>{{ stats.total }} data</strong></li>
-            </ul>
+            <p class="small mb-0">
+              Data yang akurat bisa disimpan ke dataset training untuk
+              meningkatkan performa model di training berikutnya.
+            </p>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="alert alert-warning mt-3 mb-0">
-      <i class="bi bi-exclamation-triangle"></i>
-      <strong>Catatan:</strong> Data uji <strong>TIDAK</strong> digunakan untuk
-      training model. Jika ingin menambah data training, gunakan menu
-      <a href="{{ url_for('scrape') }}" class="alert-link">Scrape Data</a>.
+    <div class="alert alert-info mt-3 mb-0">
+      <i class="bi bi-lightbulb"></i>
+      <strong>Tips:</strong> Gunakan tombol <span class="badge bg-success"><i class="bi bi-download"></i></span> untuk menyimpan
+      data yang prediksinya sudah benar ke database training, sehingga bisa digunakan untuk melatih model di masa depan.
     </div>
   </div>
 </div>
