@@ -75,18 +75,6 @@ PTI{% endblock %} {% block content %}
             </div>
           </div>
 
-          <div class="mb-3">
-            <div class="alert alert-info">
-              <i class="bi bi-info-circle"></i>
-              <strong>Info:</strong> Setelah scraping selesai, data akan
-              tersimpan tanpa label. Anda bisa melakukan auto-label di
-              <a href="{{ url_for('label_data') }}" class="alert-link"
-                >halaman labeling</a
-              >
-              dengan klik tombol <strong>"Auto-Label Semua"</strong>.
-            </div>
-          </div>
-
           <div class="alert alert-warning">
             <i class="bi bi-exclamation-triangle"></i>
             <strong>Perhatian:</strong> Proses scraping membutuhkan waktu
@@ -138,33 +126,11 @@ PTI{% endblock %} {% block content %}
             Data yang sudah ada (berdasarkan judul dan tahun) tidak akan
             diduplikasi
           </li>
-          <li>Setelah scraping, data akan tersimpan tanpa label</li>
+          <li>Data hasil scraping otomatis dilabel menggunakan keyword scoring</li>
           <li>
-            Untuk melabel data, buka halaman
-            <strong>Label Data Training</strong>
-          </li>
-          <li>
-            Gunakan tombol <strong>"Auto-Label Semua"</strong> untuk label
-            otomatis
+            Setelah scraping selesai, data siap digunakan untuk training model
           </li>
         </ul>
-
-        <div class="alert alert-success mt-3">
-          <h6 class="alert-heading">
-            <i class="bi bi-lightbulb"></i> Alur Kerja:
-          </h6>
-          <small>
-            <ol class="mb-0">
-              <li>Scraping data dari ejournal</li>
-              <li>Buka halaman <strong>Label Data Training</strong></li>
-              <li>
-                Klik tombol <strong>"Auto-Label Semua"</strong> (jika model
-                sudah di-train)
-              </li>
-              <li>Atau label manual untuk data training</li>
-            </ol>
-          </small>
-        </div>
       </div>
     </div>
   </div>
