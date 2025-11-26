@@ -492,8 +492,18 @@ def train_model():
             print(f"{'='*60}")
             print(f"Total training data: {len(training_data)}")
             
-            # Get K value dari form
-            k_value = request.form.get('k_value', 5, type=int)
+            # Get K value dari form (default dari config atau 5)
+            k_value = request.form.get('k_value', app.config.get('KNN_K_VALUE', 5), type=int)
+            
+            # Validasi K value
+            if k_value < 1:
+                flash('Nilai K minimal 1!', 'error')
+                return redirect(url_for('train_model'))
+            if k_value > len(training_data):
+                flash(f'Nilai K ({k_value}) tidak boleh lebih besar dari jumlah data training ({len(training_data)})!', 'error')
+                return redirect(url_for('train_model'))
+            
+            print(f"🎯 Training dengan K = {k_value}")
             
             # Initialize classifier
             classifier = KNNClassifier(k=k_value)
@@ -715,6 +725,21 @@ def evaluation():
     return render_template('evaluation.html', 
                          latest=latest_metrics,
                          history=all_metrics)
+
+
+@app.route('/evaluation/clear-history', methods=['POST'])
+def clear_training_history():
+    """Hapus semua riwayat training"""
+    try:
+        count = ModelMetrics.query.count()
+        ModelMetrics.query.delete()
+        db.session.commit()
+        flash(f'✅ Berhasil menghapus {count} riwayat training!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error menghapus riwayat: {str(e)}', 'error')
+    
+    return redirect(url_for('evaluation'))
 
 
 @app.route('/api/stats')

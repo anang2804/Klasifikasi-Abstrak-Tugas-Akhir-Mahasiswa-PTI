@@ -159,10 +159,20 @@ PTI{% endblock %} {% block content %}
 <div class="row mb-4">
   <div class="col-12">
     <div class="card">
-      <div class="card-header bg-white">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
         <h5 class="mb-0">
           <i class="bi bi-clock-history"></i> Riwayat Training
         </h5>
+        {% if history %}
+        <button
+          type="button"
+          class="btn btn-danger btn-sm"
+          data-bs-toggle="modal"
+          data-bs-target="#clearHistoryModal"
+        >
+          <i class="bi bi-trash"></i> Hapus Semua Riwayat
+        </button>
+        {% endif %}
       </div>
       <div class="card-body">
         <div class="table-responsive">
@@ -418,4 +428,60 @@ PTI{% endblock %} {% block content %}
   });
   {% endif %}
 </script>
-{% endif %} {% endblock %}
+{% endif %}
+
+<!-- Modal Konfirmasi Hapus Riwayat -->
+<div
+  class="modal fade"
+  id="clearHistoryModal"
+  tabindex="-1"
+  aria-labelledby="clearHistoryModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="clearHistoryModalLabel">
+          <i class="bi bi-exclamation-triangle"></i> Konfirmasi Hapus Riwayat
+        </h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <p>
+          Anda yakin ingin menghapus
+          <strong>SEMUA riwayat training</strong>?
+        </p>
+        <div class="alert alert-warning">
+          <i class="bi bi-exclamation-circle"></i>
+          <strong>Peringatan:</strong>
+          <ul class="mb-0 mt-2">
+            <li>Semua data history metrics akan dihapus permanen</li>
+            <li>Tindakan ini tidak dapat dibatalkan</li>
+            <li>Model yang sudah disimpan tetap ada dan masih bisa digunakan</li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x"></i> Batal
+        </button>
+        <form
+          method="POST"
+          action="{{ url_for('clear_training_history') }}"
+          style="display: inline"
+        >
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Ya, Hapus Semua
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
