@@ -1,5 +1,6 @@
-{% extends "base.html" %} {% block title %}Riwayat Klasifikasi - Klasifikasi Abstrak PTI{%
-endblock %} {% block content %}
+{% extends "base.html" %}
+{% block title %}Riwayat Klasifikasi - Klasifikasi Abstrak PTI{% endblock %}
+{% block content %}
 <div class="row mb-4">
   <div class="col-12">
     <div class="card bg-info text-white">
@@ -87,15 +88,14 @@ endblock %} {% block content %}
   </div>
 </div>
 
-<!-- Alert jika belum ada data -->
 {% if stats.total == 0 %}
-<div class="alert alert-info">
+<div class="alert alert-info mb-4">
   <i class="bi bi-info-circle"></i>
   <strong>Belum ada riwayat klasifikasi.</strong>
   Riwayat akan muncul setelah Anda melakukan klasifikasi di
   <a href="{{ url_for('classify') }}" class="alert-link">Menu Klasifikasi</a>.
 </div>
-{% endif %>
+{% endif %}
 
 <!-- Test Data Table -->
 {% if test_data %}
