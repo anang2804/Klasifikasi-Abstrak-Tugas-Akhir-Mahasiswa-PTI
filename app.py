@@ -461,18 +461,20 @@ def train_model():
             flash(f'Error during training: {str(e)}', 'error')
     
     # GET request - hitung statistik data
-    # ✅ Data Latih (dari scraping + auto-label)
-    training_count = Abstract.query.filter(Abstract.label.isnot(None)).count()
+    # ✅ Total dataset yang akan digunakan training (sudah berlabel)
+    total_dataset = Abstract.query.filter(Abstract.label.isnot(None)).count()
     
-    # ✅ Data Uji (dari klasifikasi manual/upload)
-    test_count = ClassificationHistory.query.count()
+    # ✅ Estimasi split 80/20 dari train_test_split
+    estimated_train_size = int(total_dataset * (1 - app.config['TEST_SIZE']))
+    estimated_test_size = int(total_dataset * app.config['TEST_SIZE'])
     
-    # Total semua data
+    # Total semua data (termasuk yang belum dilabel)
     total_data = Abstract.query.count()
     
     return render_template('train.html', 
-                         training_count=training_count,
-                         test_count=test_count,
+                         total_dataset=total_dataset,
+                         estimated_train_size=estimated_train_size,
+                         estimated_test_size=estimated_test_size,
                          total_data=total_data)
 
 

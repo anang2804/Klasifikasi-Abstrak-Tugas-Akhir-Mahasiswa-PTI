@@ -23,42 +23,48 @@ PTI{% endblock %} {% block content %}
       </div>
       <div class="card-body">
         <div class="row text-center mb-3">
-          <div class="col-md-6 mb-3">
-            <div class="p-4 border rounded bg-success bg-opacity-10">
-              <h2 class="text-success mb-1">{{ training_count }}</h2>
+          <div class="col-md-4 mb-3">
+            <div class="p-4 border rounded bg-primary bg-opacity-10">
+              <h2 class="text-primary mb-1">{{ total_dataset }}</h2>
               <p class="text-muted mb-0">
-                <strong>Data Latih</strong>
+                <strong>Total Dataset</strong>
               </p>
-              <small class="text-muted"
-                >(Hasil Scraping & Labeling Otomatis)</small
-              >
+              <small class="text-muted">(Data Berlabel)</small>
             </div>
           </div>
-          <div class="col-md-6 mb-3">
-            <div class="p-4 border rounded bg-info bg-opacity-10">
-              <h2 class="text-info mb-1">{{ test_count }}</h2>
+          <div class="col-md-4 mb-3">
+            <div class="p-4 border rounded bg-success bg-opacity-10">
+              <h2 class="text-success mb-1">{{ estimated_train_size }}</h2>
               <p class="text-muted mb-0">
-                <strong>Data Uji</strong>
+                <strong>Data Latih (80%)</strong>
               </p>
-              <small class="text-muted">(Dari Menu Klasifikasi)</small>
+              <small class="text-muted">(Untuk Training)</small>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="p-4 border rounded bg-warning bg-opacity-10">
+              <h2 class="text-warning mb-1">{{ estimated_test_size }}</h2>
+              <p class="text-muted mb-0">
+                <strong>Data Uji (20%)</strong>
+              </p>
+              <small class="text-muted">(Untuk Validasi)</small>
             </div>
           </div>
         </div>
 
         <div class="alert alert-info mb-3">
           <i class="bi bi-lightbulb"></i>
-          <strong>Alur Data:</strong> Data hasil scraping otomatis di-label
-          menggunakan kata kunci berbobot. Data berlabel ini ({{ training_count
-          }} data) digunakan sebagai <strong>Data Latih</strong>.
-          <strong>Data Uji</strong> ({{ test_count }} data) diperoleh dari input
-          klasifikasi di menu Klasifikasi.
+          <strong>Alur Data:</strong> Dataset sebanyak <strong>{{ total_dataset }} data</strong> 
+          (hasil scraping dan labeling otomatis) akan dibagi secara otomatis dengan stratified split:
+          <strong>{{ estimated_train_size }} data (80%)</strong> untuk melatih model KNN, dan 
+          <strong>{{ estimated_test_size }} data (20%)</strong> untuk validasi internal model.
         </div>
 
-        {% if training_count < 10 %}
+        {% if total_dataset < 10 %}
         <div class="alert alert-warning">
           <i class="bi bi-exclamation-triangle"></i>
-          <strong>Perhatian:</strong> Minimal 10 data latih diperlukan. Saat ini
-          baru ada {{ training_count }} data.
+          <strong>Perhatian:</strong> Minimal 10 data berlabel diperlukan. Saat ini
+          baru ada {{ total_dataset }} data.
           <br />
           <a href="{{ url_for('scrape') }}" class="alert-link">
             Lakukan scraping data atau cek halaman Label Data.
@@ -67,8 +73,8 @@ PTI{% endblock %} {% block content %}
         {% else %}
         <div class="alert alert-success">
           <i class="bi bi-check-circle"></i>
-          Data latih cukup! Anda memiliki {{ training_count }} data untuk
-          melatih model.
+          Data cukup! Anda memiliki {{ total_dataset }} data berlabel yang siap
+          digunakan untuk melatih model.
         </div>
         {% endif %}
       </div>
@@ -110,7 +116,7 @@ PTI{% endblock %} {% block content %}
                 <ol class="mb-0 small">
                   <li>
                     <strong>Data Selection:</strong> Ambil semua data berlabel
-                    ({{ training_count }} data latih)
+                    ({{ total_dataset }} data)
                   </li>
                   <li>
                     <strong>Preprocessing:</strong> Case folding → Tokenisasi →
@@ -121,8 +127,8 @@ PTI{% endblock %} {% block content %}
                     (max_features=1000, ngram=(1,2))
                   </li>
                   <li>
-                    <strong>Train/Test Split:</strong> 80% Training, 20% Testing
-                    (Stratified)
+                    <strong>Train/Test Split:</strong> 80% Training ({{ estimated_train_size }} data), 
+                    20% Testing ({{ estimated_test_size }} data) - Stratified
                   </li>
                   <li>
                     <strong>Model Training:</strong> K-Nearest Neighbor (KNN)
