@@ -337,27 +337,8 @@ def scrape():
         start_year = request.form.get('start_year', app.config['START_YEAR'], type=int)
         end_year = request.form.get('end_year', app.config['END_YEAR'], type=int)
         
-        try:
-            # Scraping dengan auto-label otomatis menggunakan keyword scoring
-            result = scrape_and_save(
-                app.config['BASE_URL'],
-                start_year,
-                end_year,
-                auto_label=True  # Otomatis label dengan keyword scoring
-            )
-            
-            flash(result['message'], 'success')
-            
-            # Redirect ke halaman index untuk melihat hasil
-            if result.get('total_saved', 0) > 0:
-                if result.get('auto_labeled', 0) > 0:
-                    flash(f'✅ Data otomatis di-label: RPL={result.get("rpl_count", 0)}, TKJ={result.get("tkj_count", 0)}. Anda bisa koreksi label di halaman Label Data jika diperlukan.', 'info')
-                return redirect(url_for('index'))
-            else:
-                return redirect(url_for('index'))
-            
-        except Exception as e:
-            flash(f'Error during scraping: {str(e)}', 'error')
+        # Redirect ke streaming endpoint untuk scraping real-time
+        return redirect(url_for('scrape_stream', start_year=start_year, end_year=end_year))
     
     return render_template('scrape.html')
 
