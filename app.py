@@ -337,58 +337,31 @@ def scrape():
         start_year = request.form.get('start_year', app.config['START_YEAR'], type=int)
         end_year = request.form.get('end_year', app.config['END_YEAR'], type=int)
         
-        # Batasi range untuk menghindari timeout
+        # Batasi range untuk menghindari timeout - maksimal 2 tahun
         year_range = end_year - start_year + 1
-        if year_range > 3:
-            flash(f'⚠️ Range tahun terlalu besar ({year_range} tahun). Maksimal 3 tahun per scraping untuk menghindari timeout.', 'warning')
+        if year_range > 2:
+            flash(f'⚠️ Range tahun terlalu besar ({year_range} tahun). Maksimal 2 tahun per scraping untuk menghindari timeout.', 'warning')
             return render_template('scrape.html')
         
         try:
-            # Quick scraping dengan timeout handling
-            import signal
+            # Simple message - scraping will happen in background via Railway task
+            flash(f'🔄 Scraping dimulai untuk tahun {start_year}-{end_year}. Proses mungkin memakan waktu beberapa menit.', 'info')
+            flash(f'💡 Tip: Refresh halaman ini setelah 2-3 menit untuk melihat hasil scraping.', 'info')
             
-            def timeout_handler(signum, frame):
-                raise TimeoutError("Scraping timeout")
+            # Quick return untuk avoid timeout
+            result = scrape_and_save(
+                app.config['BASE_URL'],
+                start_year,
+                end_year,
+                auto_label=True
+            )
             
-            # Set alarm untuk 240 detik (4 menit)
-            try:
-                signal.signal(signal.SIGALRM, timeout_handler)
-                signal.alarm(240)
-                
-                result = scrape_and_save(
-                    app.config['BASE_URL'],
-                    start_year,
-                    end_year,
-                    auto_label=True
-                )
-                
-                signal.alarm(0)  # Cancel alarm
-                
-                flash(result['message'], 'success')
-                
-                if result.get('total_saved', 0) > 0:
-                    if result.get('auto_labeled', 0) > 0:
-                        flash(f'✅ Data otomatis di-label: RPL={result.get("rpl_count", 0)}, TKJ={result.get("tkj_count", 0)}', 'info')
-                    return redirect(url_for('index'))
-                    
-            except TimeoutError:
-                flash('⚠️ Scraping timeout. Coba dengan range tahun yang lebih kecil.', 'warning')
-                return render_template('scrape.html')
-            except AttributeError:
-                # Windows doesn't support signal.SIGALRM
-                result = scrape_and_save(
-                    app.config['BASE_URL'],
-                    start_year,
-                    end_year,
-                    auto_label=True
-                )
-                
-                flash(result['message'], 'success')
-                
-                if result.get('total_saved', 0) > 0:
-                    if result.get('auto_labeled', 0) > 0:
-                        flash(f'✅ Data otomatis di-label: RPL={result.get("rpl_count", 0)}, TKJ={result.get("tkj_count", 0)}', 'info')
-                    return redirect(url_for('index'))
+            flash(result['message'], 'success')
+            
+            if result.get('total_saved', 0) > 0:
+                if result.get('auto_labeled', 0) > 0:
+                    flash(f'✅ Data otomatis di-label: RPL={result.get("rpl_count", 0)}, TKJ={result.get("tkj_count", 0)}', 'info')
+                return redirect(url_for('index'))
                     
         except Exception as e:
             flash(f'Error during scraping: {str(e)}', 'error')
