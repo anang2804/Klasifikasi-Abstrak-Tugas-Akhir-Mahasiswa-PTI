@@ -2,68 +2,83 @@
 Lightweight API handler for Vercel deployment.
 This file calls the actual ML API hosted elsewhere to avoid size limits.
 """
-import json
+from flask import Flask, request, jsonify
 import os
-from http.server import BaseHTTPRequestHandler
-from urllib.parse import parse_qs, urlparse
-import requests
+
+app = Flask(__name__)
+
+# Try to import requests, fallback to basic response if not available
+try:
+    import requests
+    HAS_REQUESTS = True
+except ImportError:
+    HAS_REQUESTS = False
 
 
-class handler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        """Handle GET requests"""
-        self.send_response(200)
-        self.send_header('Content-type', 'application/json')
-        self.end_headers()
-        
-        response = {
-            'status': 'ok',
-            'message': 'Document Classifier API - Vercel Endpoint',
-            'endpoints': {
-                '/api/classify': 'POST - Classify document text',
-                '/api/health': 'GET - Health check'
-            }
+@app.route('/')
+@app.route('/api')
+def index():
+    """Health check endpoint"""
+    return jsonify({
+        'status': 'ok',
+        'message': 'Document Classifier API - Vercel Endpoint',
+        'endpoints': {
+            '/api/classify': 'POST - Classify document text',
+            '/api/health': 'GET - Health check'
         }
-        self.wfile.write(json.dumps(response).encode())
-        return
+    })
+
+
+@app.route('/api/health')
+def health():
+    """Health check endpoint"""
+    return jsonify({
+        'status': 'healthy',
+        'service': 'doc-classifier-proxy'
+    })
+
+
+@app.route('/api/classify', methods=['POST'])
+def classify():
+    """Classify document text by forwarding to ML API"""
+    if not HAS_REQUESTS:
+        return jsonify({
+            'error': 'Requests library not available'
+        }), 500
     
-    def do_POST(self):
-        """Handle POST requests"""
-        # Get the ML API URL from environment variable
-        ML_API_URL = os.environ.get('ML_API_URL', 'http://localhost:5001')
+    # Get the ML API URL from environment variable
+    ML_API_URL = os.environ.get('ML_API_URL', '')
+    
+    if not ML_API_URL:
+        return jsonify({
+            'error': 'ML_API_URL environment variable not set',
+            'message': 'Please configure ML_API_URL in Vercel environment variables'
+        }), 503
+    
+    try:
+        data = request.get_json()
         
-        content_length = int(self.headers.get('Content-Length', 0))
-        post_data = self.rfile.read(content_length)
+        # Forward request to actual ML API
+        response = requests.post(
+            f'{ML_API_URL}/predict',
+            json=data,
+            timeout=30
+        )
         
-        try:
-            data = json.loads(post_data.decode('utf-8'))
-            
-            # Parse the path
-            parsed_path = urlparse(self.path)
-            
-            if parsed_path.path == '/api/classify':
-                # Forward request to actual ML API
-                response = requests.post(
-                    f'{ML_API_URL}/predict',
-                    json=data,
-                    timeout=30
-                )
-                
-                self.send_response(response.status_code)
-                self.send_header('Content-type', 'application/json')
-                self.end_headers()
-                self.wfile.write(response.content)
-                
-            else:
-                self.send_response(404)
-                self.send_header('Content-type', 'application/json')
-                self.end_headers()
-                error_response = {'error': 'Endpoint not found'}
-                self.wfile.write(json.dumps(error_response).encode())
-                
-        except Exception as e:
-            self.send_response(500)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            error_response = {'error': str(e)}
-            self.wfile.write(json.dumps(error_response).encode())
+        return response.json(), response.status_code
+        
+    except requests.exceptions.Timeout:
+        return jsonify({
+            'error': 'Request to ML API timed out'
+        }), 504
+        
+    except requests.exceptions.ConnectionError:
+        return jsonify({
+            'error': 'Could not connect to ML API',
+            'ml_api_url': ML_API_URL
+        }), 503
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e)
+        }), 500
