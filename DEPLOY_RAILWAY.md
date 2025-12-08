@@ -1,4 +1,4 @@
-# Deploy ML API ke Railway
+# Deploy Full Web App ke Railway
 
 ## Langkah-langkah:
 
@@ -14,26 +14,25 @@
 
 ### 3. Konfigurasi
 Railway akan otomatis menggunakan:
-- `Procfile` untuk start command
+- `Procfile` untuk start command (`gunicorn app:app`)
 - `requirements-railway.txt` untuk dependencies
 
 ### 4. Set Environment Variables (Optional)
-Jika diperlukan, tambahkan di Railway dashboard:
+Di Railway dashboard, tambahkan jika diperlukan:
 - `FLASK_ENV=production`
+- `SECRET_KEY=your-secret-key-here`
 - `PORT=5000` (otomatis di-set oleh Railway)
 
 ### 5. Deploy
 - Railway akan otomatis build dan deploy
-- Tunggu ~3-5 menit
-- Dapatkan URL deployment (contoh: `your-app.up.railway.app`)
+- Tunggu ~3-5 menit untuk instalasi scikit-learn
+- Dapatkan URL deployment (contoh: `https://your-app.up.railway.app`)
+- **Buka URL tersebut di browser** untuk mengakses dashboard web lengkap
 
-### 6. Update Vercel Environment Variable
-Setelah Railway deploy selesai:
-1. Buka Vercel Dashboard → Settings → Environment Variables
-2. Edit `ML_API_URL` 
-3. Set value: `https://your-app.up.railway.app` (dari Railway)
-4. Save
-5. Redeploy Vercel (atau tunggu auto-deploy)
+### 6. (Optional) Hapus Vercel atau Gunakan untuk API
+Karena full app sudah di Railway, Anda bisa:
+- **Opsi A**: Hapus deployment Vercel (tidak perlu lagi)
+- **Opsi B**: Gunakan Vercel sebagai proxy API dengan set `ML_API_URL` ke Railway URL
 
 ## Alternative: Deploy ke Render
 
