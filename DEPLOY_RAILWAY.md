@@ -1,0 +1,84 @@
+# Deploy ML API ke Railway
+
+## Langkah-langkah:
+
+### 1. Buat akun Railway
+- Kunjungi https://railway.app/
+- Sign up dengan GitHub
+
+### 2. Deploy dari GitHub
+1. Klik **New Project**
+2. Pilih **Deploy from GitHub repo**
+3. Pilih repository: `anang2804/Klasifikasi-Abstrak-Tugas-Akhir-Mahasiswa-PTI`
+4. Railway akan otomatis detect dan build
+
+### 3. Konfigurasi
+Railway akan otomatis menggunakan:
+- `Procfile` untuk start command
+- `requirements-railway.txt` untuk dependencies
+
+### 4. Set Environment Variables (Optional)
+Jika diperlukan, tambahkan di Railway dashboard:
+- `FLASK_ENV=production`
+- `PORT=5000` (otomatis di-set oleh Railway)
+
+### 5. Deploy
+- Railway akan otomatis build dan deploy
+- Tunggu ~3-5 menit
+- Dapatkan URL deployment (contoh: `your-app.up.railway.app`)
+
+### 6. Update Vercel Environment Variable
+Setelah Railway deploy selesai:
+1. Buka Vercel Dashboard → Settings → Environment Variables
+2. Edit `ML_API_URL` 
+3. Set value: `https://your-app.up.railway.app` (dari Railway)
+4. Save
+5. Redeploy Vercel (atau tunggu auto-deploy)
+
+## Alternative: Deploy ke Render
+
+### 1. Buat akun Render
+- Kunjungi https://render.com/
+- Sign up dengan GitHub
+
+### 2. Create Web Service
+1. Klik **New +** → **Web Service**
+2. Connect repository
+3. Konfigurasi:
+   - **Name**: doc-classifier-ml
+   - **Environment**: Python 3
+   - **Build Command**: `pip install -r requirements-railway.txt`
+   - **Start Command**: `gunicorn ml_api:app --bind 0.0.0.0:$PORT`
+   - **Plan**: Free
+
+### 3. Deploy
+- Klik **Create Web Service**
+- Tunggu deployment selesai
+- Copy URL deployment
+
+### 4. Update Vercel
+Set `ML_API_URL` di Vercel dengan URL dari Render
+
+## Testing Lokal
+
+Test ML API sebelum deploy:
+
+```bash
+# Install dependencies
+pip install -r requirements-railway.txt
+
+# Run ML API
+python ml_api.py
+
+# Test di browser atau curl
+curl -X POST http://localhost:5000/predict \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Penelitian tentang jaringan komputer"}'
+```
+
+## Catatan Penting
+
+- Model files (`models/*.joblib`) harus sudah ada di repository
+- Total ukuran < 500MB untuk Railway free tier
+- Railway free tier: 500 hours/month
+- Render free tier: Auto-sleep setelah 15 menit idle
