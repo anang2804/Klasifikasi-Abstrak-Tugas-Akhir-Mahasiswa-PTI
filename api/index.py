@@ -1,11 +1,7 @@
-"""
-Lightweight API handler for Vercel deployment.
-This file calls the actual ML API hosted elsewhere to avoid size limits.
-"""
+from http.server import BaseHTTPRequestHandler
 import json
 import os
 
-# Try to import requests
 try:
     import requests
     HAS_REQUESTS = True
@@ -13,99 +9,78 @@ except ImportError:
     HAS_REQUESTS = False
 
 
-def handler(event, context):
-    """
-    Main handler function for Vercel serverless
-    """
-    # Get request method and path
-    method = event.get('httpMethod', event.get('method', 'GET'))
-    path = event.get('path', event.get('rawPath', '/'))
-    
-    # GET request - return API info
-    if method == 'GET':
-        return {
-            'statusCode': 200,
-            'headers': {'Content-Type': 'application/json'},
-            'body': json.dumps({
-                'status': 'ok',
-                'message': 'Document Classifier API - Vercel Endpoint',
-                'endpoints': {
-                    '/api/classify': 'POST - Classify document text',
-                    '/api/health': 'GET - Health check'
-                }
-            })
-        }
-    
-    # POST request - forward to ML API
-    if method == 'POST':
-        if not HAS_REQUESTS:
-            return {
-                'statusCode': 500,
-                'headers': {'Content-Type': 'application/json'},
-                'body': json.dumps({'error': 'Requests library not available'})
-            }
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
         
-        # Get the ML API URL from environment variable
+        response = {
+            'status': 'ok',
+            'message': 'Document Classifier API - Vercel Endpoint',
+            'endpoints': {
+                '/api/classify': 'POST - Classify document text',
+                '/api/health': 'GET - Health check'
+            }
+        }
+        self.wfile.write(json.dumps(response).encode())
+        return
+    
+    def do_POST(self):
+        if not HAS_REQUESTS:
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': 'Requests not available'}).encode())
+            return
+        
         ML_API_URL = os.environ.get('ML_API_URL', '')
         
         if not ML_API_URL:
-            return {
-                'statusCode': 503,
-                'headers': {'Content-Type': 'application/json'},
-                'body': json.dumps({
-                    'error': 'ML_API_URL environment variable not set',
-                    'message': 'Please configure ML_API_URL in Vercel environment variables'
-                })
+            self.send_response(503)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            error_msg = {
+                'error': 'ML_API_URL environment variable not set',
+                'message': 'Please configure ML_API_URL in Vercel settings'
             }
+            self.wfile.write(json.dumps(error_msg).encode())
+            return
         
         try:
-            # Parse request body
-            body = event.get('body', '{}')
-            if isinstance(body, str):
-                data = json.loads(body)
+            content_length = int(self.headers.get('Content-Length', 0))
+            if content_length > 0:
+                post_data = self.rfile.read(content_length)
+                data = json.loads(post_data.decode('utf-8'))
             else:
-                data = body
+                data = {}
             
-            # Forward request to actual ML API
             response = requests.post(
                 f'{ML_API_URL}/predict',
                 json=data,
                 timeout=30
             )
             
-            return {
-                'statusCode': response.status_code,
-                'headers': {'Content-Type': 'application/json'},
-                'body': response.text
-            }
+            self.send_response(response.status_code)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(response.content)
             
         except requests.exceptions.Timeout:
-            return {
-                'statusCode': 504,
-                'headers': {'Content-Type': 'application/json'},
-                'body': json.dumps({'error': 'Request to ML API timed out'})
-            }
+            self.send_response(504)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': 'ML API timeout'}).encode())
             
         except requests.exceptions.ConnectionError:
-            return {
-                'statusCode': 503,
-                'headers': {'Content-Type': 'application/json'},
-                'body': json.dumps({
-                    'error': 'Could not connect to ML API',
-                    'ml_api_url': ML_API_URL
-                })
-            }
+            self.send_response(503)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            error_msg = {'error': 'Cannot connect to ML API', 'url': ML_API_URL}
+            self.wfile.write(json.dumps(error_msg).encode())
             
         except Exception as e:
-            return {
-                'statusCode': 500,
-                'headers': {'Content-Type': 'application/json'},
-                'body': json.dumps({'error': str(e)})
-            }
-    
-    # Method not allowed
-    return {
-        'statusCode': 405,
-        'headers': {'Content-Type': 'application/json'},
-        'body': json.dumps({'error': 'Method not allowed'})
-    }
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': str(e)}).encode())
