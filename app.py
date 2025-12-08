@@ -337,18 +337,46 @@ def scrape():
         start_year = request.form.get('start_year', app.config['START_YEAR'], type=int)
         end_year = request.form.get('end_year', app.config['END_YEAR'], type=int)
         
-        # Batasi range untuk menghindari timeout - maksimal 2 tahun
         year_range = end_year - start_year + 1
-        if year_range > 2:
-            flash(f'⚠️ Range tahun terlalu besar ({year_range} tahun). Maksimal 2 tahun per scraping untuk menghindari timeout.', 'warning')
-            return render_template('scrape.html')
         
-        try:
-            # Simple message - scraping will happen in background via Railway task
-            flash(f'🔄 Scraping dimulai untuk tahun {start_year}-{end_year}. Proses mungkin memakan waktu beberapa menit.', 'info')
-            flash(f'💡 Tip: Refresh halaman ini setelah 2-3 menit untuk melihat hasil scraping.', 'info')
+        # Jika range > 2 tahun, scrape secara bertahap (batch)
+        if year_range > 2:
+            flash(f'🔄 Scraping {year_range} tahun akan dilakukan secara bertahap (batch 2 tahun).', 'info')
+            flash(f'⏳ Proses ini memakan waktu ~{year_range * 2} menit. Harap bersabar...', 'warning')
             
-            # Quick return untuk avoid timeout
+            total_saved = 0
+            total_rpl = 0
+            total_tkj = 0
+            
+            # Scrape per batch 2 tahun
+            current_year = start_year
+            while current_year <= end_year:
+                batch_end = min(current_year + 1, end_year)  # 2 tahun per batch
+                
+                try:
+                    flash(f'📥 Scraping batch: {current_year}-{batch_end}...', 'info')
+                    
+                    result = scrape_and_save(
+                        app.config['BASE_URL'],
+                        current_year,
+                        batch_end,
+                        auto_label=True
+                    )
+                    
+                    total_saved += result.get('total_saved', 0)
+                    total_rpl += result.get('rpl_count', 0)
+                    total_tkj += result.get('tkj_count', 0)
+                    
+                except Exception as e:
+                    flash(f'⚠️ Error pada batch {current_year}-{batch_end}: {str(e)}', 'warning')
+                
+                current_year = batch_end + 1
+            
+            flash(f'✅ Scraping selesai! Total: {total_saved} data (RPL: {total_rpl}, TKJ: {total_tkj})', 'success')
+            return redirect(url_for('index'))
+        
+        # Single scrape untuk 2 tahun atau kurang
+        try:
             result = scrape_and_save(
                 app.config['BASE_URL'],
                 start_year,
