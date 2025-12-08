@@ -339,44 +339,20 @@ def scrape():
         
         year_range = end_year - start_year + 1
         
-        # Jika range > 2 tahun, scrape secara bertahap (batch)
+        # Untuk range besar, arahkan user untuk scrape bertahap manual
         if year_range > 2:
-            flash(f'🔄 Scraping {year_range} tahun akan dilakukan secara bertahap (batch 2 tahun).', 'info')
-            flash(f'⏳ Proses ini memakan waktu ~{year_range * 2} menit. Harap bersabar...', 'warning')
-            
-            total_saved = 0
-            total_rpl = 0
-            total_tkj = 0
-            
-            # Scrape per batch 2 tahun
-            current_year = start_year
-            while current_year <= end_year:
-                batch_end = min(current_year + 1, end_year)  # 2 tahun per batch
-                
-                try:
-                    flash(f'📥 Scraping batch: {current_year}-{batch_end}...', 'info')
-                    
-                    result = scrape_and_save(
-                        app.config['BASE_URL'],
-                        current_year,
-                        batch_end,
-                        auto_label=True
-                    )
-                    
-                    total_saved += result.get('total_saved', 0)
-                    total_rpl += result.get('rpl_count', 0)
-                    total_tkj += result.get('tkj_count', 0)
-                    
-                except Exception as e:
-                    flash(f'⚠️ Error pada batch {current_year}-{batch_end}: {str(e)}', 'warning')
-                
-                current_year = batch_end + 1
-            
-            flash(f'✅ Scraping selesai! Total: {total_saved} data (RPL: {total_rpl}, TKJ: {total_tkj})', 'success')
-            return redirect(url_for('index'))
+            flash(f'⚠️ Range {year_range} tahun terlalu besar untuk 1 request.', 'warning')
+            flash(f'💡 Solusi: Scrape bertahap secara manual:', 'info')
+            flash(f'   • Batch 1: Scrape {start_year}-{start_year+1}', 'info')
+            flash(f'   • Batch 2: Scrape {start_year+2}-{start_year+3}', 'info')
+            flash(f'   • Dan seterusnya...', 'info')
+            flash(f'📝 Atau gunakan script: python scrape_now.py {start_year} {end_year}', 'info')
+            return render_template('scrape.html')
         
-        # Single scrape untuk 2 tahun atau kurang
+        # Scrape untuk maksimal 2 tahun
         try:
+            flash(f'🔄 Scraping {start_year}-{end_year}...', 'info')
+            
             result = scrape_and_save(
                 app.config['BASE_URL'],
                 start_year,
