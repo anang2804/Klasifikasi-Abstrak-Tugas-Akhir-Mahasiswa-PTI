@@ -1,8 +1,12 @@
 [phases.setup]
-nixPkgs = ['python312', 'gcc']
+nixPkgs = ['python312', 'python312Packages.pip', 'python312Packages.virtualenv', 'gcc']
 
 [phases.install]
-cmds = ['python -m pip install --upgrade pip', 'python -m pip install -r requirements.txt']
+cmds = [
+  'python -m venv /opt/venv',
+  '. /opt/venv/bin/activate && pip install --upgrade pip',
+  '. /opt/venv/bin/activate && pip install -r requirements.txt'
+]
 
 [start]
-cmd = 'gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120 --workers 2'
+cmd = '. /opt/venv/bin/activate && gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120 --workers 2'
