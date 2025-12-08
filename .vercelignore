@@ -1,0 +1,51 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+models/
+*.pkl
+*.joblib
+*.h5
+*.model
+data/
+datasets/
+*.csv
+*.xlsx
+node_modules/
+instance/
+uploads/
+*.db
+*.sqlite
+*.sqlite3
+
+# ML-related files (too large for serverless)
+ml_api.py
+classifier.py
+feature_extraction.py
+preprocessing.py
+train_now.py
+auto_labeler.py
+auto_label_existing.py
+test_*.py
+
+# Documentation
+GUIDE.md
+TFIDF_IMPLEMENTATION.md
+README.md
+
+# Scripts
+run.bat
+run.sh
+scrape_now.py
+scraper.py
+
+# Streamlit app
+app.py
+
+# Other requirements files
+requirements-ml.txt
+requirements.txt
